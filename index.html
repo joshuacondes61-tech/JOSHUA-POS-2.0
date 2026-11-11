@@ -350,10 +350,35 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 @media(max-width:680px){.notification-panel{top:64px;right:8px;width:calc(100vw - 16px);max-height:72vh}.notification-head{padding:13px}}
 @media(prefers-reduced-motion:reduce){.notification-panel.open{animation:none!important}}
 
+
+/* SINSIN STORE Christmas seasonal edition */
+:root{--season-red:#b52d3b;--season-gold:#d6a84b;--season-pine:#075c43;--season-cream:#fff8e9}
+body{background:radial-gradient(ellipse at 12% 0%,#d9eee2 0,transparent 38%),linear-gradient(145deg,#f5f8f1,#edf3eb 55%,#fff7e8)!important}
+body.dark{background:radial-gradient(ellipse at 12% 0%,#214637 0,transparent 40%),linear-gradient(145deg,#101b17,#14241d 55%,#241c18)!important}
+header,.topbar,.app-header{border-bottom:1px solid #d6a84b55}
+button{transition:transform .2s ease,filter .2s ease,box-shadow .2s ease}
+button:hover{filter:saturate(1.12)}
+.dash-hero,.welcome-banner,.dashboard-hero{background:linear-gradient(115deg,#075c43,#0b7652 58%,#a52b3b)!important;color:#fff!important;border:1px solid #d6a84b88!important;box-shadow:0 14px 34px #075c4325}
+.stat-card,.metric-card,.dash-card{border:1px solid #d6a84b44!important;box-shadow:0 8px 24px #173d2910}
+.seasonal-garland{position:fixed;z-index:30;top:0;left:0;right:0;height:5px;pointer-events:none;background:repeating-linear-gradient(90deg,#b52d3b 0 18px,#d6a84b 18px 36px,#075c43 36px 54px)}
+.seasonal-lights{position:fixed;z-index:29;top:5px;left:0;right:0;height:12px;display:flex;justify-content:space-around;pointer-events:none}
+.seasonal-lights i{width:6px;height:9px;border-radius:50% 50% 45% 45%;background:#d6a84b;box-shadow:0 0 9px #f5d987;animation:seasonTwinkle 1.8s ease-in-out infinite alternate}
+.seasonal-lights i:nth-child(3n){background:#d95a65;box-shadow:0 0 9px #e98c91;animation-delay:.5s}
+.seasonal-lights i:nth-child(3n+1){background:#4aa77a;box-shadow:0 0 9px #86d5a8;animation-delay:1s}
+@keyframes seasonTwinkle{from{opacity:.45;transform:scale(.8)}to{opacity:1;transform:scale(1.12)}}
+.seasonal-snow{position:fixed;inset:0;z-index:28;pointer-events:none;overflow:hidden}
+.seasonal-snow span{position:absolute;top:-18px;left:var(--x);font-size:var(--size);opacity:.55;color:#fff;text-shadow:0 1px 4px #789;animation:seasonFall var(--duration) linear var(--delay) infinite}
+@keyframes seasonFall{to{transform:translate3d(var(--drift),110vh,0) rotate(360deg)}}
+.seasonal-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff2d8;color:#704a17;border:1px solid #d6a84b88;font-size:11px;font-weight:800;letter-spacing:.04em}
+.seasonal-welcome{margin:0 0 12px;padding:12px 15px;border-radius:14px;background:linear-gradient(100deg,#075c43,#0b7652 65%,#a52b3b);color:white;border:1px solid #e2bd6d;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.seasonal-welcome strong{font-size:14px}.seasonal-welcome small{opacity:.88}
+@media(prefers-reduced-motion:reduce){.seasonal-lights i,.seasonal-snow span{animation:none!important}}
+
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
+<div class="seasonal-garland" aria-hidden="true"></div><div class="seasonal-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="seasonal-snow" id="seasonalSnow" aria-hidden="true"><span style="--x:0%;--size:9px;--duration:9s;--delay:-0s;--drift:-15px">❄</span><span style="--x:47%;--size:10px;--duration:10s;--delay:-1s;--drift:23px">❄</span><span style="--x:94%;--size:11px;--duration:11s;--delay:-2s;--drift:-31px">❄</span><span style="--x:41%;--size:9px;--duration:12s;--delay:-3s;--drift:39px">❄</span><span style="--x:88%;--size:10px;--duration:13s;--delay:-4s;--drift:-47px">❄</span><span style="--x:35%;--size:11px;--duration:14s;--delay:-5s;--drift:15px">❄</span><span style="--x:82%;--size:9px;--duration:15s;--delay:-6s;--drift:-23px">❄</span><span style="--x:29%;--size:10px;--duration:9s;--delay:-7s;--drift:31px">❄</span><span style="--x:76%;--size:11px;--duration:10s;--delay:-8s;--drift:-39px">❄</span><span style="--x:23%;--size:9px;--duration:11s;--delay:-9s;--drift:47px">❄</span><span style="--x:70%;--size:10px;--duration:12s;--delay:-10s;--drift:-15px">❄</span><span style="--x:17%;--size:11px;--duration:13s;--delay:-0s;--drift:23px">❄</span><span style="--x:64%;--size:9px;--duration:14s;--delay:-1s;--drift:-31px">❄</span><span style="--x:11%;--size:10px;--duration:15s;--delay:-2s;--drift:39px">❄</span><span style="--x:58%;--size:11px;--duration:9s;--delay:-3s;--drift:-47px">❄</span><span style="--x:5%;--size:9px;--duration:10s;--delay:-4s;--drift:15px">❄</span><span style="--x:52%;--size:10px;--duration:11s;--delay:-5s;--drift:-23px">❄</span><span style="--x:99%;--size:11px;--duration:12s;--delay:-6s;--drift:31px">❄</span></div>
 
 <div id="ownerAuth" style="display:none">
  <div class="auth-card">
@@ -941,6 +966,8 @@ if(!window.__sinsinGreetingTimer){
 }
 
 function renderDashboard(){
+const dashboardRoot=$("dashboardContent")||$("mainContent")||$("main")||document.querySelector(".main-content")||document.querySelector("main");
+if(dashboardRoot&&!document.getElementById("seasonalWelcome")){const seasonal=document.createElement("div");seasonal.id="seasonalWelcome";seasonal.innerHTML="<div class=\"seasonal-welcome\"><div><strong>🎄 Season's Greetings from SINSIN STORE!</strong><br><small>Wishing you a bright, joyful, and wonderful holiday season.</small></div><span style=\"font-size:25px\">🎁✨</span></div>";dashboardRoot.prepend(seasonal);}
 const sales=db.sales.filter(s=>s.date===today());
 const revenue=sales.reduce((a,s)=>a+Number(s.total||0),0);
 const cost=sales.reduce((a,s)=>a+Number(s.cost??(s.items||[]).reduce((n,i)=>n+Number(i.cost||0)*Number(i.qty||0),0)),0);

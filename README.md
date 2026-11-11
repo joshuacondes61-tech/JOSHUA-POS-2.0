@@ -102,9 +102,42 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
  #printarea{position:absolute;left:0;top:0;width:100%;background:white!important;color:#111!important}
  .receipt{max-width:100%;margin:0 auto}
 }
+
+/* Owner sign-in */
+body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.auth-locked>#toast,body.auth-locked>#printarea{display:none!important}
+#ownerAuth{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#e7f6f1,#f4f7f6 55%,#dcefe9)}
+#ownerAuth .auth-card{width:min(100%,420px);background:#fff;border:1px solid #dce9e3;border-radius:22px;padding:28px;box-shadow:0 18px 55px #123d3020;color:#172b27}
+#ownerAuth .auth-mark{width:54px;height:54px;border-radius:16px;background:#e4f6f0;display:grid;place-items:center;font-size:27px;margin-bottom:18px}
+#ownerAuth h1{font-size:24px;margin:0 0 7px;color:#172b27}
+#ownerAuth .auth-sub{color:#71817c;margin:0 0 22px;line-height:1.5}
+#ownerAuth .auth-field{margin:13px 0}
+#ownerAuth label{display:block;color:#52645d;font-size:12px;font-weight:700;margin-bottom:6px}
+#ownerAuth input{width:100%;padding:13px;border:1px solid #dce9e3;border-radius:11px;font:inherit;color:#172b27;background:#fff}
+#ownerAuth button{width:100%;padding:13px;border-radius:11px;background:#087f70;color:#fff;font-weight:750;margin-top:8px}
+#ownerAuth .auth-error{color:#bd3030;font-size:12px;min-height:18px;margin:9px 0 0}
+#ownerAuth .auth-note{font-size:11px;color:#71817c;line-height:1.5;margin:16px 0 0}
+@media(max-width:480px){#ownerAuth .auth-card{padding:23px 19px}}
+
 </style>
 </head>
-<body>
+<body class="auth-locked">
+
+<div id="ownerAuth">
+ <div class="auth-card">
+  <div class="auth-mark">🛒</div>
+  <h1 id="authHeading">Owner sign in</h1>
+  <p class="auth-sub" id="authSub">Sign in to open your JOSHUA POS store workspace.</p>
+  <form id="ownerAuthForm" onsubmit="submitOwnerAuth(event)">
+   <div class="auth-field"><label for="ownerUsername">OWNER USERNAME</label><input id="ownerUsername" autocomplete="username" required minlength="3" maxlength="40" placeholder="Enter your username"></div>
+   <div class="auth-field"><label for="ownerPassword">PASSWORD</label><input id="ownerPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Enter your password"></div>
+   <div class="auth-field" id="confirmPasswordField" style="display:none"><label for="ownerPasswordConfirm">CONFIRM PASSWORD</label><input id="ownerPasswordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your password"></div>
+   <button id="ownerAuthSubmit" type="submit">Sign in</button>
+   <p class="auth-error" id="ownerAuthError" role="alert"></p>
+  </form>
+  <p class="auth-note">This owner login is saved in this browser only. Store records remain in this browser's local storage and do not automatically sync to other devices.</p>
+ </div>
+</div>
+
 <header class="topbar">
  <div class="brand">
   <img id="toplogo" class="logo" alt="Store logo" style="display:none">
@@ -112,6 +145,8 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
   <div style="min-width:0"><div class="brandname" id="storetitle">EMERALD STORE</div><small id="storetag">Sari-Sari POS & Inventory</small></div>
  </div>
  <div class="topactions">
+   <button class="iconbtn" onclick="ownerSignOut()" title="Sign out">↪</button>
+
   <button class="iconbtn" onclick="toggleDark()" title="Dark mode">🌙</button>
   <button class="iconbtn" onclick="navigate('settings')" title="Settings">⚙️</button>
  </div>
@@ -318,6 +353,71 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
 "use strict";
 const KEY="emeraldSariSari_v1";
 const $=id=>document.getElementById(id);
+
+const OWNER_AUTH_KEY="joshuaPosOwnerAuth_v1";
+const OWNER_SESSION_KEY="joshuaPosOwnerSession_v1";
+let ownerSetupMode=false;
+function ownerAuthMessage(message){$("ownerAuthError").textContent=message}
+function ownerAuthScreen(){
+  ownerSetupMode=!localStorage.getItem(OWNER_AUTH_KEY);
+  $("authHeading").textContent=ownerSetupMode?"Create owner account":"Owner sign in";
+  $("authSub").textContent=ownerSetupMode?"Set up the one owner account for this store.":"Sign in to open your JOSHUA POS store workspace.";
+  $("ownerAuthSubmit").textContent=ownerSetupMode?"Create owner account":"Sign in";
+  $("confirmPasswordField").style.display=ownerSetupMode?"block":"none";
+  $("ownerPassword").autocomplete=ownerSetupMode?"new-password":"current-password";
+  $("ownerPasswordConfirm").required=ownerSetupMode;
+}
+async function ownerPasswordHash(password,salt){
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:210000,hash:"SHA-256"},key,256);
+  return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,"0")).join("");
+}
+function bytesFromHex(hex){return new Uint8Array(hex.match(/.{1,2}/g).map(x=>parseInt(x,16)))}
+function ownerAuthUnlock(){
+  sessionStorage.setItem(OWNER_SESSION_KEY,"active");
+  document.body.classList.remove("auth-locked");
+  $("ownerAuth").style.display="none";
+}
+async function submitOwnerAuth(event){
+  event.preventDefault();ownerAuthMessage("");
+  const username=$("ownerUsername").value.trim().toLowerCase();
+  const password=$("ownerPassword").value;
+  if(username.length<3)return ownerAuthMessage("Username must be at least 3 characters.");
+  if(password.length<8)return ownerAuthMessage("Password must be at least 8 characters.");
+  try{
+    if(ownerSetupMode){
+      if(password!==$("ownerPasswordConfirm").value)return ownerAuthMessage("Passwords do not match.");
+      if(localStorage.getItem(OWNER_AUTH_KEY))return ownerAuthScreen();
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      const saltHex=Array.from(salt,b=>b.toString(16).padStart(2,"0")).join("");
+      const hash=await ownerPasswordHash(password,salt);
+      localStorage.setItem(OWNER_AUTH_KEY,JSON.stringify({username,salt:saltHex,hash,createdAt:new Date().toISOString()}));
+      ownerAuthUnlock();toast("Owner account created. Welcome!");
+    }else{
+      const account=JSON.parse(localStorage.getItem(OWNER_AUTH_KEY)||"null");
+      if(!account||username!==account.username)return ownerAuthMessage("Incorrect username or password.");
+      const hash=await ownerPasswordHash(password,bytesFromHex(account.salt));
+      if(hash!==account.hash)return ownerAuthMessage("Incorrect username or password.");
+      ownerAuthUnlock();toast("Signed in successfully.");
+    }
+  }catch(error){ownerAuthMessage("Sign-in setup is unavailable in this browser. Please use the secure HTTPS website.");}
+}
+function ownerSignOut(){
+  sessionStorage.removeItem(OWNER_SESSION_KEY);
+  $("ownerPassword").value="";
+  $("ownerPasswordConfirm").value="";
+  $("ownerAuth").style.display="grid";
+  document.body.classList.add("auth-locked");
+  ownerAuthScreen();
+}
+function ownerAuthBootstrap(){
+  ownerAuthScreen();
+  if(sessionStorage.getItem(OWNER_SESSION_KEY)==="active"){
+    $("ownerAuth").style.display="none";
+    document.body.classList.remove("auth-locked");
+  }
+}
+
 const money=n=>"₱"+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const today=()=>new Date().toISOString().slice(0,10);
@@ -447,6 +547,7 @@ function exportCSV(){let rows=[["Receipt","Date","Customer","Payment","Subtotal"
 $("buydate").value=today();$("utangdate").value=today();$("expdate").value=today();$("reportto").value=today();setReportRange(30);
 document.body.classList.toggle("dark",!!db.dark);
 storeHeader();refresh();
+ownerAuthBootstrap();
 </script>
 </body>
 </html>

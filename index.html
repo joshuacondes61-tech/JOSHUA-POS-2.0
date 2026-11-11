@@ -428,8 +428,16 @@ async function cloudRequest(action,options={}){
   if(options.body!==undefined)headers["Content-Type"]="application/json";
   const token=cloudToken();
   if(token)headers.Authorization="Bearer "+token;
-  const response=await fetch(CLOUD_API+"?action="+encodeURIComponent(action),{...options,headers,cache:"no-store"});
-  let data={};try{data=await response.json()}catch(e){}
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),15000);
+  let response,data={};
+  try{
+    response=await fetch(CLOUD_API+"?action="+encodeURIComponent(action),{...options,headers,cache:"no-store",signal:controller.signal});
+    try{data=await response.json()}catch(e){}
+  }catch(error){
+    if(error.name==="AbortError")throw new Error("Cloud server is taking too long to respond. Please check your connection and try again.");
+    throw error;
+  }finally{clearTimeout(timeout)}
   if(!response.ok){const error=new Error(data.error||("Cloud request failed ("+response.status+")."));error.status=response.status;throw error}
   return data;
 }

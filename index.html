@@ -164,6 +164,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 #ownerAuth .auth-error{color:#bd3030;text-align:center;font-size:12px;min-height:18px;margin:10px 0 0}
 #ownerAuth .auth-note{font-size:11px;color:#84938c;line-height:1.5;text-align:center;margin:19px 0 0}
 @media(max-width:480px){#ownerAuth{padding:18px 14px}#ownerAuth .auth-card{padding:28px 22px;border-radius:24px}#ownerAuth .auth-mark{width:60px;height:60px}#ownerAuth h1{font-size:24px}}
+.iphone-install-help{margin-top:18px;padding:13px 14px;border:1px solid #b9d9ce;border-radius:14px;background:#eff9f4;color:#23483b;text-align:left;font-size:12px;line-height:1.5}.iphone-install-title{font-size:13px;font-weight:850;margin-bottom:5px}.iphone-install-help p{margin:4px 0 7px}.iphone-install-help ol{margin:6px 0 8px;padding-left:20px}.iphone-install-help li{margin:4px 0}.iphone-install-help small{display:block;opacity:.82}body.dark #ownerAuth .iphone-install-help{background:#172b23;border-color:#426858;color:#dcefe5}@media(max-width:480px){.iphone-install-help{font-size:11px;padding:11px 12px}}
 #ownerAuth .seasonal-auth-banner{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 0 18px;padding:10px 12px;border-radius:14px;text-align:center;font-size:12px;line-height:1.4;border:1px solid #d6a84b88;background:linear-gradient(100deg,#075c43,#0b7652 62%,#a52b3b);color:#fff}
 #ownerAuth .seasonal-auth-icon{font-size:23px;flex:0 0 auto}
 #ownerAuth .seasonal-auth-banner small{display:block;font-size:10px;font-weight:600;opacity:.86;margin-top:3px}
@@ -511,6 +512,7 @@ button,.navbtn,.iconbtn{min-height:42px}
    <button id="ownerAuthSubmit" type="submit">Sign in</button>
    <p class="auth-error" id="ownerAuthError" role="alert"></p>
   </form>
+  <div class="iphone-install-help" id="iphoneInstallHelp" style="display:none"><div class="iphone-install-title">📲 Install SINSIN STORE on your iPhone</div><p>Use Safari to add the POS to your Home Screen for an app-like experience.</p><ol><li>Open this website in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button (square with an up arrow).</li><li>Scroll and choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong> to finish.</li></ol><small>If “Add to Home Screen” is missing, make sure you are using Safari—not an in-app browser.</small></div>
  </div>
 </div>
 
@@ -1107,6 +1109,7 @@ function applyAutomaticSeasonTheme(){
  if(welcome)welcome.innerHTML='<div class="seasonal-welcome"><div><strong>'+theme.icon+' '+theme.title+'</strong><br><small>'+theme.message+'</small></div><span style="font-size:25px">'+theme.symbols[0]+theme.symbols[1]+'</span></div>';
 }
 applyAutomaticSeasonTheme();
+(function(){const ua=navigator.userAgent||"";const ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);const guide=document.getElementById("iphoneInstallHelp");if(guide&&ios&&!window.matchMedia("(display-mode: standalone)").matches)guide.style.display="block";})();
 
 function renderDashboard(){
 const dashboardRoot=$("dashboardContent")||$("mainContent")||$("main")||document.querySelector(".main-content")||document.querySelector("main");

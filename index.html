@@ -720,12 +720,31 @@ async function startPosScanner(){
  const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
- modal.style.display="flex";resetPosScanFeedback();status.textContent="Allow camera access when your device asks.";reader.innerHTML="";
+ modal.style.display="flex";resetPosScanFeedback();status.textContent="Starting rear camera…";reader.innerHTML="";
+ posScanActive=false;posLastScanCode="";posLastScanSeenAt=0;
  try{
   posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
   const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
-  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  await posQrScanner.start(mobile?{facingMode:"environment"}:{facingMode:"user"},{fps:20,qrbox:(w,h)=>({width:Math.min(640,w*.98),height:Math.min(280,h*.62)}),formatsToSupport:formats,videoConstraints:{width:{ideal:1280},height:{ideal:720},facingMode:{ideal:mobile?"environment":"user"}}},async(decoded)=>{
+  const ua=navigator.userAgent||"";
+  const mobile=/Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  let cameraChoice={facingMode:mobile?"environment":"user"};
+  try{
+   const cameras=await Html5Qrcode.getCameras();
+   if(cameras&&cameras.length){
+    const preferred=mobile?cameras.find(c=>/back|rear|environment|wide/i.test(c.label||"")):cameras.find(c=>/front|user|facetime/i.test(c.label||""));
+    if(preferred)cameraChoice=preferred.id;
+   }
+  }catch(cameraListError){}
+  status.textContent="Camera readying…";
+  posScanActive=true;
+  await posQrScanner.start(cameraChoice,{
+   fps:mobile?12:18,
+   qrbox:(w,h)=>({width:Math.max(220,Math.min(900,Math.floor(w*.96))),height:Math.max(100,Math.min(360,Math.floor(h*.72)))}),
+   aspectRatio:mobile?1.777:1.333,
+   disableFlip:true,
+   formatsToSupport:formats,
+   videoConstraints:{width:{ideal:1280},height:{ideal:720}}
+  },async(decoded)=>{
    if(!posScanActive)return;
    const code=String(decoded||"").trim();
    if(!code)return;
@@ -762,10 +781,21 @@ async function startPosScanner(){
   },()=>{
    if(posLastScanCode&&Date.now()-posLastScanSeenAt>900)posLastScanCode="";
   });
-  posScanActive=true;
-  status.textContent=mobile?"Camera ready. Hold the barcode horizontally, 15–25 cm away, fully inside the scan frame. Use bright lighting.":"Webcam ready. Hold the barcode steady in the scan area.";
-  const button=$("posTorchButton");if(button){button.dataset.enabled="false";button.style.display="none";try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}}
- }catch(e){await stopPosScanner();toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.")}
+  status.textContent=mobile?"Rear camera ready. Center the barcode inside the scan area and hold steady.":"Webcam ready. Hold the barcode steady in the scan area.";
+  const button=$("posTorchButton");
+  if(button){
+   button.dataset.enabled="false";
+   button.style.display="none";
+   try{
+    const caps=posQrScanner.getRunningTrackCapabilities();
+    if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}
+   }catch(e){}
+  }
+ }catch(e){
+  posScanActive=false;
+  await stopPosScanner();
+  toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.");
+ }
 }
 async function togglePosTorch(){
  const button=$("posTorchButton");if(!posQrScanner||!button)return;

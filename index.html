@@ -321,7 +321,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 <main class="main">
 <section class="page active dashboard-page" id="page-dashboard">
- <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1>Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
+ <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1 id="dashboardGreeting">Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
  <div class="grid dashgrid">
   <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
   <div class="card stat"><div><small>Gross profit today</small><div class="num" id="dashprofit">₱0.00</div><small>Sales less item cost</small></div><div class="emoji">📈</div></div>
@@ -756,6 +756,17 @@ function toggleDark(){
 function storeHeader(){let s=db.settings;$("storetitle").textContent=s.name||"SINSIN STORE";$("storetag").textContent=s.address||"Sari-Sari POS & Inventory";$("toplogo").src=s.logo||"sinsin-store-logo.svg";$("toplogo").style.display="block";$("logofallback").style.display="none"}
 function refresh(){storeHeader();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
 function fillSelects(){let cats=[...new Set(db.products.map(p=>p.category||"Others"))].sort();["poscat","invcat"].forEach(id=>{let el=$(id),old=el.value;el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");el.value=old});$("buyproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (Stock: ${p.stock})</option>`).join("")||'<option value="">Add products first</option>';$("buysupplier").innerHTML='<option value="">Unspecified</option>'+db.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}
+function updateStoreGreeting(){
+ const heading=$("dashboardGreeting");
+ if(!heading)return;
+ const hour=Number(new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
+ const greeting=hour>=5&&hour<12?"Good morning":hour>=12&&hour<18?"Good afternoon":"Good evening";
+ heading.textContent=greeting+"! 👋";
+}
+if(!window.__sinsinGreetingTimer){
+ updateStoreGreeting();
+ window.__sinsinGreetingTimer=setInterval(updateStoreGreeting,60000);
+}
 function renderDashboard(){
 const sales=db.sales.filter(s=>s.date===today());
 const revenue=sales.reduce((a,s)=>a+Number(s.total||0),0);

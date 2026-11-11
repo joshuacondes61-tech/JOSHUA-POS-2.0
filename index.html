@@ -477,7 +477,7 @@ async function openCloudWorkspace(){
       saveDB();
       toast("Product catalog cleared. Sales, purchases, suppliers, expenses, and utang were preserved.");
     }else{
-      toast("Cloud data loaded successfully.");
+      // Silent cloud restoration on refresh; avoid a success toast every time.
     }
   }
   ownerAuthUnlock();

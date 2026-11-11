@@ -119,18 +119,27 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
  html.auth-pending.auth-silent #ownerAuth{display:none!important}
  html.auth-pending #ownerAuthForm{display:none!important}
 body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.auth-locked>#toast,body.auth-locked>#printarea{display:none!important}
-#ownerAuth{display:none;position:fixed;inset:0;z-index:9999;place-items:center;padding:20px;background:linear-gradient(135deg,#e7f6f1,#f4f7f6 55%,#dcefe9)}
-#ownerAuth .auth-card{width:min(100%,420px);background:#fff;border:1px solid #dce9e3;border-radius:22px;padding:28px;box-shadow:0 18px 55px #123d3020;color:#172b27}
-#ownerAuth .auth-mark{width:54px;height:54px;border-radius:16px;background:#e4f6f0;display:grid;place-items:center;font-size:27px;margin-bottom:18px}
-#ownerAuth h1{font-size:24px;margin:0 0 7px;color:#172b27}
-#ownerAuth .auth-sub{color:#71817c;margin:0 0 22px;line-height:1.5}
-#ownerAuth .auth-field{margin:13px 0}
-#ownerAuth label{display:block;color:#52645d;font-size:12px;font-weight:700;margin-bottom:6px}
-#ownerAuth input{width:100%;padding:13px;border:1px solid #dce9e3;border-radius:11px;font:inherit;color:#172b27;background:#fff}
-#ownerAuth button{width:100%;padding:13px;border-radius:11px;background:#087f70;color:#fff;font-weight:750;margin-top:8px}
-#ownerAuth .auth-error{color:#bd3030;font-size:12px;min-height:18px;margin:9px 0 0}
-#ownerAuth .auth-note{font-size:11px;color:#71817c;line-height:1.5;margin:16px 0 0}
-@media(max-width:480px){#ownerAuth .auth-card{padding:23px 19px}}
+#ownerAuth{display:none;position:fixed;inset:0;z-index:9999;place-items:center;overflow:auto;padding:24px 18px;background:radial-gradient(ellipse at 12% 12%,#b7e9d8 0,transparent 38%),radial-gradient(ellipse at 88% 88%,#c8e9df 0,transparent 36%),linear-gradient(135deg,#effaf5 0%,#e3f2ec 48%,#f7fbf8 100%)}
+#ownerAuth:before,#ownerAuth:after{content:"";position:fixed;border:1px solid #087f7018;border-radius:50%;pointer-events:none}
+#ownerAuth:before{width:420px;height:420px;top:-230px;right:-130px}
+#ownerAuth:after{width:300px;height:300px;bottom:-190px;left:-100px}
+#ownerAuth .auth-card{position:relative;z-index:1;width:min(100%,430px);background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border:1px solid #ffffff;border-radius:28px;padding:34px;box-shadow:0 28px 80px #174c3b20,0 3px 12px #174c3b0b;color:#172b27;animation:authCardIn .35s ease-out}
+@keyframes authCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#ownerAuth .auth-mark{width:66px;height:66px;border-radius:21px;background:linear-gradient(145deg,#087f70,#0ba58c);display:grid;place-items:center;font-size:32px;margin:0 auto 22px;box-shadow:0 10px 24px #087f7033}
+#ownerAuth .auth-eyebrow{text-align:center;color:#087f70;font-size:10px;font-weight:850;letter-spacing:2px;margin:0 0 10px}
+#ownerAuth h1{font-size:27px;letter-spacing:-.7px;text-align:center;margin:0 0 8px;color:#17382f}
+#ownerAuth .auth-sub{color:#71817c;text-align:center;font-size:13px;margin:0 0 26px;line-height:1.55}
+#ownerAuth .auth-field{margin:15px 0}
+#ownerAuth label{display:block;color:#52645d;font-size:11px;font-weight:800;letter-spacing:.7px;margin-bottom:7px}
+#ownerAuth input{width:100%;padding:14px 15px;border:1px solid #dce9e3;border-radius:13px;font:inherit;font-size:14px;color:#172b27;background:#f9fcfa;transition:border-color .2s,box-shadow .2s,background .2s}
+#ownerAuth input:focus{border-color:#0ba58c;box-shadow:0 0 0 4px #0ba58c18;background:#fff;outline:none}
+#ownerAuth input::placeholder{color:#a0ada7}
+#ownerAuth button{width:100%;min-height:49px;padding:13px 16px;border-radius:13px;background:linear-gradient(110deg,#087f70,#0ba58c);color:#fff;font-weight:800;font-size:14px;margin-top:12px;box-shadow:0 8px 18px #087f702b;transition:transform .18s,box-shadow .18s}
+#ownerAuth button:hover{transform:translateY(-1px);box-shadow:0 11px 23px #087f7038}
+#ownerAuth button:active{transform:translateY(0)}
+#ownerAuth .auth-error{color:#bd3030;text-align:center;font-size:12px;min-height:18px;margin:10px 0 0}
+#ownerAuth .auth-note{font-size:11px;color:#84938c;line-height:1.5;text-align:center;margin:19px 0 0}
+@media(max-width:480px){#ownerAuth{padding:18px 14px}#ownerAuth .auth-card{padding:28px 22px;border-radius:24px}#ownerAuth .auth-mark{width:60px;height:60px}#ownerAuth h1{font-size:24px}}
 @media(max-width:680px){
  #posScanner{align-items:flex-start!important;justify-content:center!important;padding:calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px)!important}
  #posScanner .pos-scanner-card{width:100%!important;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px)!important;padding:12px!important;border-radius:14px!important}
@@ -149,6 +158,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 <div id="ownerAuth" style="display:none">
  <div class="auth-card">
   <div class="auth-mark">🛒</div>
+  <p class="auth-eyebrow">SINSIN STORE · OWNER ACCESS</p>
   <h1 id="authHeading">Owner sign in</h1>
   <p class="auth-sub" id="authSub">Sign in to continue.</p>
   <form id="ownerAuthForm" onsubmit="submitOwnerAuth(event)">

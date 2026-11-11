@@ -454,6 +454,25 @@ button,.navbtn,.iconbtn{min-height:42px}
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+
+/* Keep inventory scanner exit control visible on small phones */
+.inventory-scanner-card{max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.inventory-scanner-header{position:sticky;top:-16px;z-index:5;background:var(--card);padding:10px 0 12px;margin:-16px 0 0;border-bottom:1px solid var(--border);gap:8px}
+.inventory-scanner-header h2{font-size:clamp(15px,4vw,20px);min-width:0}
+.inventory-scanner-close{flex:0 0 auto;min-height:42px;padding:9px 12px;white-space:nowrap;position:relative;z-index:6}
+@media(max-width:680px){
+ #inventoryScanner.inventory-scanner-overlay{padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom));align-items:flex-start!important;justify-content:center!important}
+ #inventoryScanner .inventory-scanner-card{width:100%;max-width:520px;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);padding:14px;border-radius:16px}
+ #inventoryScanner .inventory-scanner-header{top:-14px;margin:-14px 0 0;padding:10px 0 12px}
+ #inventoryScanner .inventory-scanner-close{min-width:76px;font-size:12px}
+ #inventoryScanReader{max-width:100%;overflow:hidden}
+ #inventoryScanReader video{max-width:100%;object-fit:cover}
+}
+@media(max-height:560px) and (orientation:landscape){
+ #inventoryScanner.inventory-scanner-overlay{align-items:flex-start!important;padding-top:6px;padding-bottom:6px}
+ #inventoryScanner .inventory-scanner-card{max-height:calc(100dvh - 12px)}
+}
+
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -698,9 +717,9 @@ button,.navbtn,.iconbtn{min-height:42px}
 </nav>
 <div id="toast" class="toast" style="display:none"></div>
 <div id="printarea" style="display:none"></div>
-<div id="inventoryScanner" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
- <div style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
-  <div class="between"><h2 style="margin:0">📷 Scan product barcode</h2><button type="button" class="danger sm" onclick="stopInventoryScanner()">Close</button></div>
+<div id="inventoryScanner" class="inventory-scanner-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
+ <div class="inventory-scanner-card" style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
+  <div class="between inventory-scanner-header"><h2 style="margin:0">📷 Scan product barcode</h2><button type="button" class="danger sm inventory-scanner-close" onclick="stopInventoryScanner()" aria-label="Exit inventory scanner">✕ Exit</button></div>
   <p class="muted" style="margin:10px 0">Point your phone's rear camera at the product barcode.</p>
   <div id="inventoryScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
   <p id="inventoryScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p><button type="button" id="inventoryTorchButton" class="secondary full" style="margin-top:10px;display:none" onclick="toggleInventoryTorch()">🔦 Turn on flashlight</button><p class="muted" style="font-size:12px;margin-top:8px">Keep the phone about 10–20 cm from the barcode. Move slowly until the image becomes sharp; avoid glare.</p>

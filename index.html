@@ -3,6 +3,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#087f70">
+<meta name="application-name" content="SINSIN STORE POS">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./sinsin-store-logo.svg" type="image/svg+xml">
 <script>
 document.documentElement.classList.add("auth-pending");
 try { if(sessionStorage.getItem("joshuaPosCloudToken_v1")) document.documentElement.classList.add("auth-silent"); } catch(e) {}
@@ -11,7 +14,7 @@ try {
   if (savedPOSTheme.dark === true) document.documentElement.classList.add("dark-start");
 } catch (e) {}
 </script>
-<title>JOSHUA POS</title>
+<title>SINSIN STORE POS</title>
 <style>
 :root{--green:#087f70;--green2:#0ba58c;--pale:#e4f6f0;--bg:#f4f7f6;--card:#fff;--text:#172b27;--muted:#71817c;--border:#e2eae7;--red:#dc4545;--yellow:#f4b942;--shadow:0 5px 20px #163b3010}
 html.dark-start{--bg:#101916;--card:#19241f;--text:#edf5f1;--muted:#a1b2aa;--border:#304039;--pale:#243e35;--shadow:0 5px 20px #0003}
@@ -984,6 +987,15 @@ $("buydate").value=today();$("utangdate").value=today();$("expdate").value=today
 document.body.classList.toggle("dark",!!db.dark);
 storeHeader();refresh();
 ownerAuthBootstrap();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(error => {
+      console.warn("SINSIN STORE app installation support could not start:", error);
+    });
+  });
+}
 </script>
 </body>
 </html>

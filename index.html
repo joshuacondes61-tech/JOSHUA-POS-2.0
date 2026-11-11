@@ -43,6 +43,7 @@ small,.muted{color:var(--muted)}
 .pagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
 .pagehead p{margin:0;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.dashgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);min-width:0}
 .stat{display:flex;justify-content:space-between;gap:8px}
@@ -89,7 +90,7 @@ td{font-size:13px}tr:last-child td{border-bottom:0}
 .chartbar{width:min(36px,80%);min-height:3px;background:linear-gradient(#16b99a,#087f70);border-radius:6px 6px 2px 2px}
 .chartlabel{font-size:10px;color:var(--muted)}
 hr{border:0;border-top:1px solid var(--border);margin:14px 0}
-@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.poslayout{grid-template-columns:minmax(0,1fr) 310px}.sidebar{width:190px}.main{padding:17px}}
+@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.poslayout{grid-template-columns:minmax(0,1fr) 310px}.sidebar{width:190px}.main{padding:17px}}
 @media(max-width:680px){
  .topbar{padding:10px 13px}.brandname{font-size:14px}.logo{width:38px;height:38px}
  .app{display:block;padding-bottom:78px}.sidebar{display:none}.main{padding:14px}
@@ -179,21 +180,27 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 <main class="main">
 <section class="page active" id="page-dashboard">
- <div class="pagehead"><div><h1>Good day! 👋</h1><p>Your store at a glance.</p></div><span class="badge" id="todaybadge"></span></div>
- <div class="grid">
+ <div class="pagehead"><div><h1>Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p></div><span class="badge" id="todaybadge"></span></div>
+ <div class="grid dashgrid">
   <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
+  <div class="card stat"><div><small>Gross profit today</small><div class="num" id="dashprofit">₱0.00</div><small>Sales less item cost</small></div><div class="emoji">📈</div></div>
   <div class="card stat"><div><small>Products</small><div class="num" id="dashproducts">0</div><small>Items in catalog</small></div><div class="emoji">📦</div></div>
-  <div class="card stat"><div><small>Inventory cost</small><div class="num" id="dashstock">₱0</div><small>Estimated stock value</small></div><div class="emoji">🏪</div></div>
-  <div class="card stat"><div><small>Low stock</small><div class="num" id="dashlow">0</div><small>Needs attention</small></div><div class="emoji">⚠️</div></div>
+  <div class="card stat"><div><small>Inventory cost</small><div class="num" id="dashstock">₱0.00</div><small>Estimated current stock cost</small></div><div class="emoji">🏪</div></div>
+  <div class="card stat"><div><small>Stock alerts</small><div class="num" id="dashlow">0</div><small id="dashstockdetail">Low and out of stock</small></div><div class="emoji">⚠️</div></div>
+  <div class="card stat"><div><small>Average sale</small><div class="num" id="dashaverage">₱0.00</div><small>Today's sales per transaction</small></div><div class="emoji">🧾</div></div>
  </div>
  <div class="grid2">
-  <div class="card"><div class="between"><h2>Sales overview</h2><button class="secondary sm" onclick="navigate('reports')">Full report ↗</button></div><div id="dashchart" class="chart"></div><div class="between"><small>Sales over the last 7 days</small><strong id="weektotal">₱0</strong></div></div>
+  <div class="card"><div class="between"><h2>Sales overview</h2><button class="secondary sm" onclick="navigate('reports')">Full report ↗</button></div><div id="dashchart" class="chart"></div><div class="between"><small>Sales over the last 7 days</small><strong id="weektotal">₱0.00</strong></div></div>
   <div class="card"><h2>Quick actions</h2><div class="grid2">
    <button onclick="navigate('pos')">🛒 New sale</button><button class="secondary" onclick="navigate('inventory')">＋ Product</button>
    <button class="secondary" onclick="navigate('purchases')">📥 Stock purchase</button><button class="secondary" onclick="navigate('utang')">📒 Record utang</button>
   </div><hr><h3>Store alerts</h3><div id="dashalerts" class="stack"></div></div>
  </div>
- <div class="card" style="margin-top:16px"><h2>Recent sales</h2><div id="dashrecent"></div></div>
+ <div class="grid2" style="margin-top:16px">
+  <div class="card"><h2>Top-selling products today</h2><div id="dashtopsellers" class="stack"></div></div>
+  <div class="card"><h2>Payment summary today</h2><div id="dashpayments" class="stack"></div></div>
+ </div>
+ <div class="card" style="margin-top:16px"><h2>Recent sales today</h2><div id="dashrecent"></div></div>
 </section>
 
 <section class="page" id="page-pos">
@@ -549,16 +556,44 @@ function storeHeader(){let s=db.settings;$("storetitle").textContent=s.name||"SI
 function refresh(){storeHeader();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
 function fillSelects(){let cats=[...new Set(db.products.map(p=>p.category||"Others"))].sort();["poscat","invcat"].forEach(id=>{let el=$(id),old=el.value;el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");el.value=old});$("buyproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (Stock: ${p.stock})</option>`).join("")||'<option value="">Add products first</option>';$("buysupplier").innerHTML='<option value="">Unspecified</option>'+db.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}
 function renderDashboard(){
-let sales=db.sales.filter(s=>s.date===today()),revenue=sales.reduce((a,s)=>a+s.total,0);
+const sales=db.sales.filter(s=>s.date===today());
+const revenue=sales.reduce((a,s)=>a+Number(s.total||0),0);
+const cost=sales.reduce((a,s)=>a+Number(s.cost??(s.items||[]).reduce((n,i)=>n+Number(i.cost||0)*Number(i.qty||0),0)),0);
+const gross=revenue-cost;
 $("todaybadge").textContent=new Date().toLocaleDateString("en-PH",{weekday:"short",month:"short",day:"numeric"});
-$("dashsales").textContent=money(revenue);$("dashtransactions").textContent=sales.length+" transactions";$("dashproducts").textContent=db.products.length;
-$("dashstock").textContent=money(db.products.reduce((a,p)=>a+p.cost*p.stock,0));let low=db.products.filter(p=>p.stock<=p.min);
-$("dashlow").textContent=low.length;
-let days=Array.from({length:7},(_,i)=>{let d=new Date();d.setDate(d.getDate()-(6-i));let date=d.toISOString().slice(0,10);return {date,label:d.toLocaleDateString("en",{weekday:"short"}),amount:db.sales.filter(s=>s.date===date).reduce((a,s)=>a+s.total,0)}});
-let max=Math.max(1,...days.map(x=>x.amount));$("dashchart").innerHTML=days.map(x=>`<div class="chartcol" title="${esc(x.date)}: ${money(x.amount)}"><small style="font-size:10px">${x.amount?Math.round(x.amount):""}</small><div class="chartbar" style="height:${Math.max(3,x.amount/max*72)}%"></div><span class="chartlabel">${x.label}</span></div>`).join("");
+$("dashsales").textContent=money(revenue);
+$("dashtransactions").textContent=sales.length+" transactions";
+$("dashprofit").textContent=money(gross);
+$("dashproducts").textContent=db.products.length;
+$("dashstock").textContent=money(db.products.reduce((a,p)=>a+Number(p.cost||0)*Number(p.stock||0),0));
+const out=db.products.filter(p=>Number(p.stock)<=0);
+const low=db.products.filter(p=>Number(p.stock)>0&&Number(p.stock)<=Number(p.min||0));
+$("dashlow").textContent=low.length+out.length;
+$("dashstockdetail").textContent=low.length+" low · "+out.length+" out of stock";
+$("dashaverage").textContent=money(sales.length?revenue/sales.length:0);
+const days=Array.from({length:7},(_,i)=>{let d=new Date();d.setDate(d.getDate()-(6-i));let date=d.toISOString().slice(0,10);return {date,label:d.toLocaleDateString("en-PH",{weekday:"short"}),amount:db.sales.filter(s=>s.date===date).reduce((a,s)=>a+Number(s.total||0),0)}});
+const max=Math.max(1,...days.map(x=>x.amount));
+$("dashchart").innerHTML=days.map(x=>`<div class="chartcol" title="${esc(x.date)}: ${money(x.amount)}"><small style="font-size:10px">${x.amount?Math.round(x.amount):""}</small><div class="chartbar" style="height:${Math.max(3,x.amount/max*72)}%"></div><span class="chartlabel">${x.label}</span></div>`).join("");
 $("weektotal").textContent=money(days.reduce((a,x)=>a+x.amount,0));
-let alerts=[...low.map(p=>`<div class="between"><span>⚠️ ${esc(p.name)}</span><span class="badge yellowbg">${p.stock} left</span></div>`),...db.products.filter(p=>p.expiry&&p.expiry<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).map(p=>`<div class="between"><span>📅 ${esc(p.name)}</span><span class="badge redbg">Expires ${localDate(p.expiry)}</span></div>`)];
-$("dashalerts").innerHTML=alerts.join("")||'<div class="empty">✨ Everything looks good!</div>';
+const expiryAlerts=db.products.filter(p=>p.expiry&&p.expiry<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).map(p=>{
+ const daysLeft=Math.ceil((Date.parse(p.expiry+"T00:00:00")-Date.parse(today()+"T00:00:00"))/86400000);
+ const label=daysLeft<0?"Expired":daysLeft===0?"Expires today":"Expires in "+daysLeft+" day"+(daysLeft===1?"":"s");
+ return {date:p.expiry,html:`<div class="between"><span>📅 ${esc(p.name)}</span><span class="badge redbg">${label}</span></div>`};
+});
+const alerts=[
+ ...out.map(p=>({date:"",html:`<div class="between"><span>🚫 ${esc(p.name)}</span><span class="badge redbg">Out of stock</span></div>`})),
+ ...low.map(p=>({date:"",html:`<div class="between"><span>⚠️ ${esc(p.name)}</span><span class="badge yellowbg">${p.stock} left</span></div>`})),
+ ...expiryAlerts
+].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+$("dashalerts").innerHTML=alerts.map(a=>a.html).join("")||'<div class="empty">✨ Everything looks good!</div>';
+const sold={};
+sales.forEach(s=>(s.items||[]).forEach(i=>{const name=i.name||"Unnamed product";sold[name]=(sold[name]||0)+Number(i.qty||0)}));
+const top=Object.entries(sold).sort((a,b)=>b[1]-a[1]).slice(0,6);
+$("dashtopsellers").innerHTML=top.length?top.map(([name,qty])=>`<div class="between"><span>${esc(name)}</span><strong>${qty} sold</strong></div>`).join(""):'<div class="empty">No products sold today.</div>';
+const methods={};
+sales.forEach(s=>{const method=s.payment||"Unspecified";methods[method]=(methods[method]||0)+Number(s.total||0)});
+const paymentRows=Object.entries(methods).sort((a,b)=>b[1]-a[1]);
+$("dashpayments").innerHTML=paymentRows.length?paymentRows.map(([method,amount])=>`<div class="between"><span>${esc(method)}</span><strong>${money(amount)}</strong></div>`).join(""):'<div class="empty">No payments recorded today.</div>';
 $("dashrecent").innerHTML=sales.length?table(["Time","Receipt","Customer","Payment","Total"],sales.slice().reverse().slice(0,6).map(s=>[esc(s.time||""),esc(s.id),esc(s.customer||"Walk-in"),esc(s.payment),money(s.total)])):'<div class="empty">No sales recorded today.</div>';
 }
 function renderPOS(){

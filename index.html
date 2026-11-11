@@ -809,10 +809,11 @@ async function startPosScanner(){
   status.textContent=mobile?"Rear camera ready. Center the barcode inside the scan area and hold steady.":"Webcam ready. Hold the barcode steady in the scan area.";
   const button=$("posTorchButton");
   if(button){
-   button.dataset.enabled="false";button.style.display="none";
+   button.dataset.enabled="false";button.textContent="🔦 Turn on flashlight";
+   button.style.display=mobile?"block":"none";
    try{
     const caps=posQrScanner.getRunningTrackCapabilities();
-    if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}
+    if(caps&&caps.torch)button.style.display="block";
     // Best-effort exposure boost on browsers/cameras that expose this control.
     if(caps&&caps.exposureCompensation){
      const range=caps.exposureCompensation;
@@ -833,9 +834,14 @@ async function startPosScanner(){
 }
 async function togglePosTorch(){
  const button=$("posTorchButton");if(!posQrScanner||!button)return;
- try{const caps=posQrScanner.getRunningTrackCapabilities();if(!caps||!caps.torch){toast("Flashlight is not supported by this camera.");return}
- const enabled=button.dataset.enabled!=="true";await posQrScanner.applyVideoConstraints({advanced:[{torch:enabled}]});button.dataset.enabled=String(enabled);button.textContent=enabled?"🔦 Turn off flashlight":"🔦 Turn on flashlight";
- }catch(e){toast("Could not change flashlight on this camera.")}
+ try{
+  const caps=posQrScanner.getRunningTrackCapabilities();
+  if(!caps||!caps.torch){toast("iPhone browser does not provide flashlight control for this camera. Use the iPhone's built-in Camera app or brighter lighting.");return}
+  const enabled=button.dataset.enabled!=="true";
+  await posQrScanner.applyVideoConstraints({advanced:[{torch:enabled}]});
+  button.dataset.enabled=String(enabled);
+  button.textContent=enabled?"🔦 Turn off flashlight":"🔦 Turn on flashlight";
+ }catch(e){toast("iOS or this camera blocked flashlight control.")}
 }
 async function stopPosScanner(){
  posScanActive=false;

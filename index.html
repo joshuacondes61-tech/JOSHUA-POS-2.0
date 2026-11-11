@@ -126,6 +126,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 @media(max-width:480px){#ownerAuth .auth-card{padding:23px 19px}}
 
 </style>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 
@@ -359,7 +360,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  <div style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
   <div class="between"><h2 style="margin:0">📷 Scan product barcode</h2><button type="button" class="danger sm" onclick="stopInventoryScanner()">Close</button></div>
   <p class="muted" style="margin:10px 0">Point your Android phone's rear camera at the product barcode.</p>
-  <video id="inventoryScanVideo" playsinline muted style="width:100%;max-height:55vh;object-fit:cover;background:#111;border-radius:12px"></video>
+  <div id="inventoryScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
   <p id="inventoryScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p>
  </div>
 </div>
@@ -609,57 +610,57 @@ p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span
 `<div class="btnrow"><button class="secondary sm" onclick="editProduct('${p.id}')">Edit</button><button class="danger sm" onclick="deleteProduct('${p.id}')">Delete</button></div>`
 ]));fillSelects();
 }
-let inventoryScanStream=null,inventoryScanActive=false,inventoryScanFrame=0;
+let inventoryQrScanner=null,inventoryScanActive=false;
 async function startInventoryScanner(){
-  if(!("BarcodeDetector" in window)){toast("This browser does not support built-in barcode scanning. Use Chrome on Android or enter the barcode manually.");return}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires a secure HTTPS connection.");return}
-  let detector;
-  try{
-    const formats=await BarcodeDetector.getSupportedFormats();
-    const wanted=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf","qr_code"].filter(x=>formats.includes(x));
-    if(!wanted.length){toast("No supported barcode formats were found.");return}
-    detector=new BarcodeDetector({formats:wanted});
-  }catch(e){toast("Barcode scanner is unavailable in this browser.");return}
-  const modal=$("inventoryScanner"),video=$("inventoryScanVideo"),status=$("inventoryScanStatus");
+  const modal=$("inventoryScanner"),status=$("inventoryScanStatus"),reader=$("inventoryScanReader");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported mobile browser.");return}
+  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection and try again.");return}
   modal.style.display="flex";status.textContent="Allow camera access when your phone asks.";
+  reader.innerHTML="";
   try{
-    inventoryScanStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
-    video.srcObject=inventoryScanStream;await video.play();inventoryScanActive=true;status.textContent="Camera ready. Hold the barcode steady inside the camera view.";
-    const scan=async()=>{
-      if(!inventoryScanActive)return;
-      try{
-        if(video.readyState>=2){
-          const codes=await detector.detect(video);
-          if(codes&&codes.length&&codes[0].rawValue){
-            const code=codes[0].rawValue.trim();
-            $("pbarcode").value=code;
-            stopInventoryScanner();
-            await lookupScannedProduct(code);
-            return;
-          }
-        }
-      }catch(e){}
-      if(inventoryScanActive)inventoryScanFrame=requestAnimationFrame(scan);
-    };
-    inventoryScanFrame=requestAnimationFrame(scan);
+    inventoryQrScanner=new Html5Qrcode("inventoryScanReader",{verbose:false});
+    const formatsToSupport=[
+      Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE
+    ];
+    await inventoryQrScanner.start(
+      {facingMode:"environment"},
+      {fps:12,qrbox:(w,h)=>({width:Math.min(300,w*0.85),height:Math.min(150,h*0.55)}),aspectRatio:1.5,formatsToSupport},
+      async(decodedText)=>{
+        if(!inventoryScanActive)return;
+        inventoryScanActive=false;
+        const code=String(decodedText||"").trim();
+        $("pbarcode").value=code;
+        await stopInventoryScanner();
+        await lookupScannedProduct(code);
+      },
+      ()=>{}
+    );
+    inventoryScanActive=true;
+    status.textContent="Camera ready. Point the rear camera at the product barcode.";
   }catch(e){
-    stopInventoryScanner();
-    toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in Chrome settings.":"Could not open the phone camera. Check that no other app is using it.");
+    await stopInventoryScanner();
+    const msg=e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in Safari or Chrome settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.";
+    toast(msg);
   }
 }
-function stopInventoryScanner(){
+async function stopInventoryScanner(){
   inventoryScanActive=false;
-  if(inventoryScanFrame)cancelAnimationFrame(inventoryScanFrame);
-  if(inventoryScanStream){inventoryScanStream.getTracks().forEach(t=>t.stop());inventoryScanStream=null}
-  const video=$("inventoryScanVideo");if(video)video.srcObject=null;
+  if(inventoryQrScanner){
+    try{if(inventoryQrScanner.isScanning)await inventoryQrScanner.stop()}catch(e){}
+    try{await inventoryQrScanner.clear()}catch(e){}
+    inventoryQrScanner=null;
+  }
+  const reader=$("inventoryScanReader");if(reader)reader.innerHTML="";
   const modal=$("inventoryScanner");if(modal)modal.style.display="none";
 }
 async function lookupScannedProduct(code){
   const existing=db.products.find(p=>String(p.barcode||"").trim()===code);
   if(existing){toast("Already in inventory: "+existing.name);return}
-  $("inventoryScanStatus").textContent=""; 
   try{
-    const response=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,product_name_en,categories", {headers:{"Accept":"application/json"}});
+    const response=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,product_name_en,categories",{headers:{"Accept":"application/json"}});
     if(!response.ok)throw new Error("Lookup unavailable");
     const data=await response.json(),product=data&&data.product;
     const name=product&&(product.product_name||product.product_name_en);
@@ -669,13 +670,9 @@ async function lookupScannedProduct(code){
         const category=String(product.categories).split(",")[0].trim().split(":").pop().replace(/-/g," ");
         if(category)$("pcat").value=category.charAt(0).toUpperCase()+category.slice(1);
       }
-      toast("Product identified: "+name+". Please verify details and enter prices and stock.");
-    }else{
-      toast("Barcode scanned. Product name not found online; please enter the name and prices.");
-    }
-  }catch(e){
-    toast("Barcode scanned. Online product lookup unavailable; enter the product name and prices.");
-  }
+      toast("Product identified: "+name+". Verify details and enter prices and stock.");
+    }else toast("Barcode scanned. Product name not found online; enter the name and prices.");
+  }catch(e){toast("Barcode scanned. Online product lookup unavailable; enter the name and prices.")}
 }
 function previewImage(e){let f=e.target.files[0];if(!f)return;if(f.size>2*1024*1024){toast("Image is too large. Choose an image under 2 MB.");e.target.value="";return}let r=new FileReader();r.onload=()=>{productImageData=r.result;$("imagepreview").src=productImageData;$("imagepreview").style.display="block"};r.readAsDataURL(f)}
 function resetProductForm(){ $("productform").reset();$("editid").value="";productImageData="";$("imagepreview").src="";$("imagepreview").style.display="none";$("productformtitle").textContent="Add new product";$("pmin").value=5}

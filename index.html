@@ -523,7 +523,17 @@ function ownerAuthLoading(){
 }
 async function ownerAuthBootstrap(){
   const token=cloudToken();
-  ownerAuthLoading();
+  if(token){
+    ownerAuthLoading();
+  }else{
+    // No saved session: show the sign-in form immediately instead of a misleading recurring restore message.
+    ownerSetupMode=false;
+    ownerAuthScreen();
+    $("ownerAuthForm").style.display="block";
+    $("ownerAuth").style.display="grid";
+    document.body.classList.add("auth-locked");
+    document.documentElement.classList.remove("auth-pending");
+  }
   $("ownerAuthSubmit").disabled=true;
   try{
     const status=await cloudRequest("auth_status",{method:"GET"});

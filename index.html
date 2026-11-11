@@ -401,7 +401,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 <div id="inventoryScanner" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
  <div style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
   <div class="between"><h2 style="margin:0">📷 Scan product barcode</h2><button type="button" class="danger sm" onclick="stopInventoryScanner()">Close</button></div>
-  <p class="muted" style="margin:10px 0">Point your Android phone's rear camera at the product barcode.</p>
+  <p class="muted" style="margin:10px 0">Point your phone's rear camera at the product barcode.</p>
   <div id="inventoryScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
   <p id="inventoryScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p><button type="button" id="inventoryTorchButton" class="secondary full" style="margin-top:10px;display:none" onclick="toggleInventoryTorch()">🔦 Turn on flashlight</button><p class="muted" style="font-size:12px;margin-top:8px">Keep the phone about 10–20 cm from the barcode. Move slowly until the image becomes sharp; avoid glare.</p>
  </div>
@@ -725,7 +725,7 @@ async function startPosScanner(){
   posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
   const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
   const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  await posQrScanner.start(mobile?{facingMode:"environment"}:{facingMode:"user"},{fps:15,qrbox:(w,h)=>({width:Math.min(460,w*.94),height:Math.min(210,h*.5)}),aspectRatio:1.6,formatsToSupport:formats,videoConstraints:{width:{ideal:1920},height:{ideal:1080},facingMode:{ideal:mobile?"environment":"user"}}},async(decoded)=>{
+  await posQrScanner.start(mobile?{facingMode:"environment"}:{facingMode:"user"},{fps:20,qrbox:(w,h)=>({width:Math.min(640,w*.98),height:Math.min(280,h*.62)}),formatsToSupport:formats,videoConstraints:{width:{ideal:1280},height:{ideal:720},facingMode:{ideal:mobile?"environment":"user"}}},async(decoded)=>{
    if(!posScanActive)return;
    const code=String(decoded||"").trim();
    if(!code)return;
@@ -763,7 +763,7 @@ async function startPosScanner(){
    if(posLastScanCode&&Date.now()-posLastScanSeenAt>900)posLastScanCode="";
   });
   posScanActive=true;
-  status.textContent=mobile?"Camera ready. Use the rear camera and hold the barcode steady.":"Webcam ready. Hold the barcode steady in the scan area.";
+  status.textContent=mobile?"Camera ready. Hold the barcode horizontally, 15–25 cm away, fully inside the scan frame. Use bright lighting.":"Webcam ready. Hold the barcode steady in the scan area.";
   const button=$("posTorchButton");if(button){button.dataset.enabled="false";button.style.display="none";try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}}
  }catch(e){await stopPosScanner();toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.")}
 }
@@ -862,13 +862,12 @@ async function startInventoryScanner(){
     await inventoryQrScanner.start(
       cameraConfig,
       {
-        fps:15,
-        qrbox:(w,h)=>({width:Math.min(460,w*0.94),height:Math.min(210,h*0.5)}),
-        aspectRatio:1.6,
+        fps:20,
+        qrbox:(w,h)=>({width:Math.min(640,w*0.98),height:Math.min(280,h*0.62)}),
         formatsToSupport,
         videoConstraints:{
-          width:{ideal:1920},
-          height:{ideal:1080},
+          width:{ideal:1280},
+          height:{ideal:720},
           ...(isMobile?{facingMode:{ideal:"environment"}}:{facingMode:{ideal:"user"}})
         }
       },
@@ -884,7 +883,7 @@ async function startInventoryScanner(){
       ()=>{}
     );
     inventoryScanActive=true;
-    status.textContent=isMobile?"Camera ready. Hold the phone 10–20 cm away and move slowly until the barcode is sharp.":"Webcam ready. Hold the barcode 10–20 cm from the camera and adjust its position until sharp.";
+    status.textContent=isMobile?"Camera ready. Hold the barcode horizontally, 15–25 cm away, fully inside the scan frame. Use bright lighting.":"Webcam ready. Hold the barcode 10–20 cm from the camera and adjust its position until sharp.";
     const torchButton=$("inventoryTorchButton");
     if(torchButton){
       torchButton.dataset.enabled="false";

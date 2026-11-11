@@ -220,7 +220,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
    <div id="posproducts" class="productgrid"></div>
   </div>
   <div class="card cartcard">
-   <div class="between"><h2>🛍️ Current order</h2><button class="danger sm" onclick="clearCart()">Clear</button></div>
+   <div class="between"><h2>🛍️ Current order</h2><button class="danger sm" onclick="voidCart()">⊘ Void Cart</button></div>
    <div id="cartitems"><div class="empty">Your cart is empty.</div></div>
    <hr>
    <div class="field"><label>Customer name (optional)</label><input id="saleCustomer" placeholder="Walk-in customer"></div>
@@ -730,7 +730,14 @@ async function stopPosScanner(){
 function scanBarcode(){let q=$("possearch").value.trim().toLowerCase();let p=db.products.find(x=>x.barcode.toLowerCase()===q);if(p){addCart(p.id);$("possearch").value="";renderPOS()}else toast("Barcode not found")}
 function addCart(id){let p=db.products.find(x=>x.id===id);if(!p)return;if(p.stock<=0)return toast("Out of stock!");let c=cart.find(x=>x.id===id);if(c){if(c.qty>=p.stock)return toast("Not enough stock");c.qty++}else cart.push({id,qty:1});renderCart()}
 function changeQty(id,d){let c=cart.find(x=>x.id===id),p=db.products.find(x=>x.id===id);if(!c)return;c.qty+=d;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.stock){c.qty=p.stock;toast("Stock limit reached")}renderCart()}
-function clearCart(){cart=[];renderCart()}
+function voidCart(){
+ if(!cart.length)return toast("The cart is already empty.");
+ if(!confirm("Void this current cart? All items and entered payment details will be cleared. Inventory stock will not change because this sale has not been completed."))return;
+ cart=[];
+ $("cash").value="";$("discount").value="0";$("saleCustomer").value="";$("payment").value="Cash";
+ renderCart();
+ toast("Current cart voided. Inventory was not changed.");
+}
 function cartAmounts(){let subtotal=cart.reduce((a,c)=>{let p=db.products.find(x=>x.id===c.id);return a+(p?p.price*c.qty:0)},0),discount=Math.min(subtotal,Math.max(0,Number($("discount").value)||0));return {subtotal,discount,total:subtotal-discount}}
 function renderCart(){
 let el=$("cartitems");if(!el)return;

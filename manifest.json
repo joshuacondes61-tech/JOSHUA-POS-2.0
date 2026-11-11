@@ -11,13 +11,13 @@
   "theme_color": "#087f70",
   "icons": [
     {
-      "src": "./sinsin-store-logo.svg",
+      "src": "./sinsin-store-logo.svg?v=20261112",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "./sinsin-store-logo.svg",
+      "src": "./sinsin-store-logo.svg?v=20261112",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"

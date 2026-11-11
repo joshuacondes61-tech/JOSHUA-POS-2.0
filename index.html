@@ -207,7 +207,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  <div class="pagehead"><div><h1>Cashier POS</h1><p>Tap a product to add it to the cart.</p></div><span class="badge">₱ Philippine peso</span></div>
  <div class="poslayout">
   <div class="stack">
-   <div class="row"><input id="possearch" placeholder="🔎 Search product or scan barcode..." oninput="renderPOS()" onkeydown="if(event.key==='Enter')scanBarcode()"><select id="poscat" style="max-width:145px" onchange="renderPOS()"><option value="">All categories</option></select></div>
+   <div class="row"><input id="possearch" placeholder="🔎 Search product or scan barcode..." oninput="renderPOS()" onkeydown="if(event.key==='Enter')scanBarcode()"><button type="button" class="secondary" onclick="startPosScanner()">📷 Scan</button><select id="poscat" style="max-width:145px" onchange="renderPOS()"><option value="">All categories</option></select></div>
    <div id="posproducts" class="productgrid"></div>
   </div>
   <div class="card cartcard">
@@ -372,6 +372,17 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  </div>
 </div>
 
+
+<div id="posScanner" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
+ <div style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
+  <div class="between"><h2 style="margin:0">📷 Scan item for sale</h2><button type="button" class="danger sm" onclick="stopPosScanner()">Close</button></div>
+  <p class="muted" style="margin:10px 0">Point your camera at the product barcode.</p>
+  <div id="posScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
+  <p id="posScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p>
+  <button type="button" id="posTorchButton" class="secondary full" style="margin-top:10px;display:none" onclick="togglePosTorch()">🔦 Turn on flashlight</button>
+  <p class="muted" style="font-size:12px;margin-top:8px">Hold the barcode steady about 10–20 cm from the camera. A successful scan adds one item to the current cart.</p>
+ </div>
+</div>
 
 <script>
 "use strict";
@@ -601,6 +612,43 @@ let q=($("possearch").value||"").toLowerCase(),cat=$("poscat").value;
 let list=db.products.filter(p=>(p.name+" "+p.barcode+" "+p.category).toLowerCase().includes(q)&&(!cat||p.category===cat));
 $("posproducts").innerHTML=list.map(p=>`<div class="productcard" onclick="addCart('${p.id}')" title="Tap to add"><img src="${p.image||""}" onerror="this.style.visibility='hidden'" alt=""><div class="productinfo"><strong>${esc(p.name)}</strong><small>${p.stock} in stock</small><div class="price">${money(p.price)}</div></div></div>`).join("")||'<div class="empty">No products found. Add products in Inventory.</div>';
 }
+async function startPosScanner(){
+ const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
+ if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
+ modal.style.display="flex";status.textContent="Allow camera access when your device asks.";reader.innerHTML="";
+ try{
+  posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
+  const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  await posQrScanner.start(mobile?{facingMode:"environment"}:{facingMode:"user"},{fps:15,qrbox:(w,h)=>({width:Math.min(460,w*.94),height:Math.min(210,h*.5)}),aspectRatio:1.6,formatsToSupport:formats,videoConstraints:{width:{ideal:1920},height:{ideal:1080},facingMode:{ideal:mobile?"environment":"user"}}},async(decoded)=>{
+   if(!posScanActive)return;
+   posScanActive=false;
+   const code=String(decoded||"").trim();
+   playInventoryScanSound();
+   await stopPosScanner();
+   const product=db.products.find(p=>String(p.barcode||"").trim().toLowerCase()===code.toLowerCase());
+   if(product){addCart(product.id);$("possearch").value="";renderPOS();toast("Added to cart: "+product.name)}
+   else{$("possearch").value=code;renderPOS();toast("Barcode not found in inventory: "+code)}
+  },()=>{});
+  posScanActive=true;
+  status.textContent=mobile?"Camera ready. Use the rear camera and hold the barcode steady.":"Webcam ready. Hold the barcode steady in the scan area.";
+  const button=$("posTorchButton");if(button){button.dataset.enabled="false";button.style.display="none";try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}}
+ }catch(e){await stopPosScanner();toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.")}
+}
+async function togglePosTorch(){
+ const button=$("posTorchButton");if(!posQrScanner||!button)return;
+ try{const caps=posQrScanner.getRunningTrackCapabilities();if(!caps||!caps.torch){toast("Flashlight is not supported by this camera.");return}
+ const enabled=button.dataset.enabled!=="true";await posQrScanner.applyVideoConstraints({advanced:[{torch:enabled}]});button.dataset.enabled=String(enabled);button.textContent=enabled?"🔦 Turn off flashlight":"🔦 Turn on flashlight";
+ }catch(e){toast("Could not change flashlight on this camera.")}
+}
+async function stopPosScanner(){
+ posScanActive=false;
+ if(posQrScanner){try{if(posQrScanner.isScanning)await posQrScanner.stop()}catch(e){}try{await posQrScanner.clear()}catch(e){}posQrScanner=null}
+ const reader=$("posScanReader");if(reader)reader.innerHTML="";
+ const button=$("posTorchButton");if(button){button.style.display="none";button.dataset.enabled="false"}
+ const modal=$("posScanner");if(modal)modal.style.display="none";
+}
 function scanBarcode(){let q=$("possearch").value.trim().toLowerCase();let p=db.products.find(x=>x.barcode.toLowerCase()===q);if(p){addCart(p.id);$("possearch").value="";renderPOS()}else toast("Barcode not found")}
 function addCart(id){let p=db.products.find(x=>x.id===id);if(!p)return;if(p.stock<=0)return toast("Out of stock!");let c=cart.find(x=>x.id===id);if(c){if(c.qty>=p.stock)return toast("Not enough stock");c.qty++}else cart.push({id,qty:1});renderCart()}
 function changeQty(id,d){let c=cart.find(x=>x.id===id),p=db.products.find(x=>x.id===id);if(!c)return;c.qty+=d;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.stock){c.qty=p.stock;toast("Stock limit reached")}renderCart()}
@@ -641,6 +689,7 @@ p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span
 ]));fillSelects();
 }
 let inventoryQrScanner=null,inventoryScanActive=false;
+let posQrScanner=null,posScanActive=false;
 let inventoryScanSound=null;
 function playInventoryScanSound(){if(!inventoryScanSound)return;try{inventoryScanSound.currentTime=0;const playback=inventoryScanSound.play();if(playback&&playback.catch)playback.catch(()=>{})}catch(e){}}
 async function startInventoryScanner(){

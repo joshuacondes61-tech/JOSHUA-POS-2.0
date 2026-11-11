@@ -353,13 +353,44 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 /* SINSIN STORE Christmas seasonal edition */
 :root{--season-red:#b52d3b;--season-gold:#d6a84b;--season-pine:#075c43;--season-cream:#fff8e9}
-body{background:radial-gradient(ellipse at 12% 0%,#d9eee2 0,transparent 38%),linear-gradient(145deg,#f5f8f1,#edf3eb 55%,#fff7e8)!important}
-body.dark{background:radial-gradient(ellipse at 12% 0%,#214637 0,transparent 40%),linear-gradient(145deg,#101b17,#14241d 55%,#241c18)!important}
-header,.topbar,.app-header{border-bottom:1px solid #d6a84b55}
+body.season-christmas{background:radial-gradient(ellipse at 12% 0%,#d9eee2 0,transparent 38%),linear-gradient(145deg,#f5f8f1,#edf3eb 55%,#fff7e8)!important}
+body.dark.season-christmas{background:radial-gradient(ellipse at 12% 0%,#214637 0,transparent 40%),linear-gradient(145deg,#101b17,#14241d 55%,#241c18)!important}
+body.season-christmas header,body.season-christmas .topbar,body.season-christmas .app-header{border-bottom:1px solid #d6a84b55}
 button{transition:transform .2s ease,filter .2s ease,box-shadow .2s ease}
 button:hover{filter:saturate(1.12)}
-.dash-hero,.welcome-banner,.dashboard-hero{background:linear-gradient(115deg,#075c43,#0b7652 58%,#a52b3b)!important;color:#fff!important;border:1px solid #d6a84b88!important;box-shadow:0 14px 34px #075c4325}
-.stat-card,.metric-card,.dash-card{border:1px solid #d6a84b44!important;box-shadow:0 8px 24px #173d2910}
+body.season-christmas .dash-hero,body.season-christmas .welcome-banner,body.season-christmas .dashboard-hero{background:linear-gradient(115deg,#075c43,#0b7652 58%,#a52b3b)!important;color:#fff!important;border:1px solid #d6a84b88!important;box-shadow:0 14px 34px #075c4325}
+body.season-christmas .stat-card,body.season-christmas .metric-card,body.season-christmas .dash-card{border:1px solid #d6a84b44!important;box-shadow:0 8px 24px #173d2910}
+.seasonal-garland{position:fixed;z-index:30;top:0;left:0;right:0;height:5px;pointer-events:none;background:repeating-linear-gradient(90deg,#b52d3b 0 18px,#d6a84b 18px 36px,#075c43 36px 54px)}
+.seasonal-lights{position:fixed;z-index:29;top:5px;left:0;right:0;height:12px;display:flex;justify-content:space-around;pointer-events:none}
+.seasonal-lights i{width:6px;height:9px;border-radius:50% 50% 45% 45%;background:#d6a84b;box-shadow:0 0 9px #f5d987;animation:seasonTwinkle 1.8s ease-in-out infinite alternate}
+.seasonal-lights i:nth-child(3n){background:#d95a65;box-shadow:0 0 9px #e98c91;animation-delay:.5s}
+.seasonal-lights i:nth-child(3n+1){background:#4aa77a;box-shadow:0 0 9px #86d5a8;animation-delay:1s}
+@keyframes seasonTwinkle{from{opacity:.45;transform:scale(.8)}to{opacity:1;transform:scale(1.12)}}
+.seasonal-snow{position:fixed;inset:0;z-index:28;pointer-events:none;overflow:hidden}
+.seasonal-snow span{position:absolute;top:-18px;left:var(--x);font-size:var(--size);opacity:.55;color:#fff;text-shadow:0 1px 4px #789;animation:seasonFall var(--duration) linear var(--delay) infinite}
+@keyframes seasonFall{to{transform:translate3d(var(--drift),110vh,0) rotate(360deg)}}
+.seasonal-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff2d8;color:#704a17;border:1px solid #d6a84b88;font-size:11px;font-weight:800;letter-spacing:.04em}
+.seasonal-welcome{margin:0 0 12px;padding:12px 15px;border-radius:14px;background:linear-gradient(100deg,#075c43,#0b7652 65%,#a52b3b);color:white;border:1px solid #e2bd6d;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.seasonal-welcome strong{font-size:14px}.seasonal-welcome small{opacity:.88}
+@media(prefers-reduced-motion:reduce){.seasonal-lights i,.seasonal-snow span{animation:none!important}}
+
+/* Automatic Philippine seasonal themes */
+body.season-halloween{background:radial-gradient(ellipse at 15% 0%,#55306f 0,transparent 42%),linear-gradient(145deg,#21152f,#30203d 58%,#47251e)!important}
+body.dark.season-halloween{background:linear-gradient(145deg,#130d1c,#24152f 58%,#2c1712)!important}
+body.season-halloween .seasonal-welcome{background:linear-gradient(100deg,#38204d,#713c8e 62%,#d66a22);border-color:#f3a34b}
+body.season-halloween .seasonal-garland{background:repeating-linear-gradient(90deg,#6d3d8b 0 18px,#f28a2e 18px 36px,#24172f 36px 54px)}
+body.season-valentine{background:radial-gradient(ellipse at 12% 0%,#ffe0ea 0,transparent 40%),linear-gradient(145deg,#fff3f6,#ffe7ef 58%,#fff0df)!important}
+body.dark.season-valentine{background:linear-gradient(145deg,#25131d,#351b2a 60%,#3b2020)!important}
+body.season-valentine .seasonal-welcome{background:linear-gradient(100deg,#b52f62,#e65d86 65%,#9c3c74);border-color:#f4b4ca}
+body.season-valentine .seasonal-garland{background:repeating-linear-gradient(90deg,#c43d70 0 18px,#f5b4ca 18px 36px,#8f315f 36px 54px)}
+body.season-summer{background:radial-gradient(ellipse at 12% 0%,#fff0b8 0,transparent 40%),linear-gradient(145deg,#fff9e8,#e9f7ed 58%,#e2f4fa)!important}
+body.dark.season-summer{background:linear-gradient(145deg,#17251e,#243a31 58%,#19303b)!important}
+body.season-summer .seasonal-welcome{background:linear-gradient(100deg,#087b70,#24a68a 62%,#e49a35);border-color:#f3d078}
+body.season-rainy{background:radial-gradient(ellipse at 12% 0%,#d8e8f6 0,transparent 40%),linear-gradient(145deg,#edf3fa,#e3edf4 58%,#e9f1ec)!important}
+body.dark.season-rainy{background:linear-gradient(145deg,#111d2a,#1a2c3d 58%,#172822)!important}
+body.season-rainy .seasonal-welcome{background:linear-gradient(100deg,#244d72,#397b9d 62%,#327d78);border-color:#a9d6e8}
+body.season-default .seasonal-welcome{background:linear-gradient(100deg,#075c43,#13866a 65%,#397c9b);border-color:#9bcdbd}
+body.season-default .seasonal-garland,body.season-default .seasonal-lights{display:none}
 .seasonal-garland{position:fixed;z-index:30;top:0;left:0;right:0;height:5px;pointer-events:none;background:repeating-linear-gradient(90deg,#b52d3b 0 18px,#d6a84b 18px 36px,#075c43 36px 54px)}
 .seasonal-lights{position:fixed;z-index:29;top:5px;left:0;right:0;height:12px;display:flex;justify-content:space-around;pointer-events:none}
 .seasonal-lights i{width:6px;height:9px;border-radius:50% 50% 45% 45%;background:#d6a84b;box-shadow:0 0 9px #f5d987;animation:seasonTwinkle 1.8s ease-in-out infinite alternate}
@@ -965,9 +996,31 @@ if(!window.__sinsinGreetingTimer){
  window.__sinsinGreetingTimer=setInterval(updateStoreGreeting,60000);
 }
 
+function applyAutomaticSeasonTheme(){
+ const now=new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Manila"}));
+ const m=now.getMonth()+1,d=now.getDate();
+ let theme={id:"default",name:"Everyday",icon:"✨",title:"Welcome to SINSIN STORE!",message:"Wishing you a bright and wonderful day.",symbols:["✦","✧","✦"]};
+ if(m===10)theme={id:"halloween",name:"Halloween",icon:"🎃",title:"Happy Halloween from SINSIN STORE!",message:"A little spooky, a lot of fun. Happy shopping!",symbols:["🎃","🦇","✦","👻"]};
+ else if(m===11||m===12)theme={id:"christmas",name:"Christmas",icon:"🎄",title:"Season's Greetings from SINSIN STORE!",message:"Wishing you a bright, joyful, and wonderful holiday season.",symbols:["❄","✨","❄","🎄"]};
+ else if(m===1&&d<=6)theme={id:"default",name:"New Year",icon:"🎆",title:"Happy New Year from SINSIN STORE!",message:"Wishing you a prosperous year filled with good things.",symbols:["🎆","✨","🎉"]};
+ else if(m===2&&d<=14)theme={id:"valentine",name:"Valentine's Day",icon:"💗",title:"Share the Love with SINSIN STORE!",message:"Sending love, smiles, and sweet little surprises.",symbols:["💗","💕","♥","✨"]};
+ else if(m>=3&&m<=5)theme={id:"summer",name:"Summer",icon:"☀️",title:"Hello, Sunshine!",message:"Enjoy bright days and happy shopping at SINSIN STORE.",symbols:["☀","✦","🌼","✧"]};
+ else if(m>=6&&m<=9)theme={id:"rainy",name:"Rainy Season",icon:"🌧️",title:"Rain or Shine, Welcome!",message:"Stay cozy, stay safe, and enjoy shopping at SINSIN STORE.",symbols:["💧","☂","💧","✦"]};
+ document.body.classList.remove("season-christmas","season-halloween","season-valentine","season-summer","season-rainy","season-default");
+ document.body.classList.add("season-"+theme.id);
+ const snow=document.getElementById("seasonalSnow");
+ if(snow)snow.innerHTML=Array.from({length:18},(_,i)=>'<span style="--x:'+((i*47)%100)+'%;--size:'+((i%3)+10)+'px;--duration:'+(9+(i%7))+'s;--delay:-'+(i%11)+'s;--drift:'+((i%2?1:-1)*(15+(i%5)*8))+'px">'+theme.symbols[i%theme.symbols.length]+'</span>').join("");
+ const garland=document.querySelector(".seasonal-garland");if(garland)garland.style.display=theme.id==="default"?"none":"block";
+ const lights=document.querySelector(".seasonal-lights");if(lights)lights.style.display=theme.id==="default"?"none":"flex";
+ window.sinsinSeason=theme;
+ const welcome=document.getElementById("seasonalWelcome");
+ if(welcome)welcome.innerHTML='<div class="seasonal-welcome"><div><strong>'+theme.icon+' '+theme.title+'</strong><br><small>'+theme.message+'</small></div><span style="font-size:25px">'+theme.symbols[0]+theme.symbols[1]+'</span></div>';
+}
+applyAutomaticSeasonTheme();
+
 function renderDashboard(){
 const dashboardRoot=$("dashboardContent")||$("mainContent")||$("main")||document.querySelector(".main-content")||document.querySelector("main");
-if(dashboardRoot&&!document.getElementById("seasonalWelcome")){const seasonal=document.createElement("div");seasonal.id="seasonalWelcome";seasonal.innerHTML="<div class=\"seasonal-welcome\"><div><strong>🎄 Season's Greetings from SINSIN STORE!</strong><br><small>Wishing you a bright, joyful, and wonderful holiday season.</small></div><span style=\"font-size:25px\">🎁✨</span></div>";dashboardRoot.prepend(seasonal);}
+if(dashboardRoot&&!document.getElementById("seasonalWelcome")){const seasonal=document.createElement("div");seasonal.id="seasonalWelcome";dashboardRoot.prepend(seasonal);applyAutomaticSeasonTheme();}
 const sales=db.sales.filter(s=>s.date===today());
 const revenue=sales.reduce((a,s)=>a+Number(s.total||0),0);
 const cost=sales.reduce((a,s)=>a+Number(s.cost??(s.items||[]).reduce((n,i)=>n+Number(i.cost||0)*Number(i.qty||0),0)),0);

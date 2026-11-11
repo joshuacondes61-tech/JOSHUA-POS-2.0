@@ -164,6 +164,24 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 #ownerAuth .auth-error{color:#bd3030;text-align:center;font-size:12px;min-height:18px;margin:10px 0 0}
 #ownerAuth .auth-note{font-size:11px;color:#84938c;line-height:1.5;text-align:center;margin:19px 0 0}
 @media(max-width:480px){#ownerAuth{padding:18px 14px}#ownerAuth .auth-card{padding:28px 22px;border-radius:24px}#ownerAuth .auth-mark{width:60px;height:60px}#ownerAuth h1{font-size:24px}}
+#ownerAuth .seasonal-auth-banner{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 0 18px;padding:10px 12px;border-radius:14px;text-align:center;font-size:12px;line-height:1.4;border:1px solid #d6a84b88;background:linear-gradient(100deg,#075c43,#0b7652 62%,#a52b3b);color:#fff}
+#ownerAuth .seasonal-auth-icon{font-size:23px;flex:0 0 auto}
+#ownerAuth .seasonal-auth-banner small{display:block;font-size:10px;font-weight:600;opacity:.86;margin-top:3px}
+body.season-halloween #ownerAuth .seasonal-auth-banner{background:linear-gradient(100deg,#38204d,#713c8e 62%,#d66a22);border-color:#f3a34b}
+body.season-valentine #ownerAuth .seasonal-auth-banner{background:linear-gradient(100deg,#b52f62,#e65d86 65%,#9c3c74);border-color:#f4b4ca}
+body.season-summer #ownerAuth .seasonal-auth-banner{background:linear-gradient(100deg,#087b70,#24a68a 62%,#e49a35);border-color:#f3d078}
+body.season-rainy #ownerAuth .seasonal-auth-banner{background:linear-gradient(100deg,#244d72,#397b9d 62%,#327d78);border-color:#a9d6e8}
+body.season-default #ownerAuth .seasonal-auth-banner{background:linear-gradient(100deg,#087f70,#13866a 65%,#397c9b);border-color:#9bcdbd}
+body.season-christmas #ownerAuth{background:radial-gradient(ellipse at 12% 12%,#b7e9d8 0,transparent 38%),linear-gradient(135deg,#eaf5ed,#dcece2 52%,#fff4e3)}
+body.season-halloween #ownerAuth{background:radial-gradient(ellipse at 12% 12%,#765092 0,transparent 40%),linear-gradient(135deg,#21152f,#382346 58%,#512b1d)}
+body.season-valentine #ownerAuth{background:radial-gradient(ellipse at 12% 12%,#ffe0ea 0,transparent 40%),linear-gradient(135deg,#fff3f6,#ffe7ef 58%,#fff0df)}
+body.season-summer #ownerAuth{background:radial-gradient(ellipse at 12% 12%,#fff0b8 0,transparent 40%),linear-gradient(135deg,#fff9e8,#e9f7ed 58%,#e2f4fa)}
+body.season-rainy #ownerAuth{background:radial-gradient(ellipse at 12% 12%,#d8e8f6 0,transparent 40%),linear-gradient(135deg,#edf3fa,#e3edf4 58%,#e9f1ec)}
+body.dark #ownerAuth .auth-card{background:rgba(25,36,31,.97);color:#edf5f1;border-color:#d6a84b66}
+body.dark #ownerAuth h1{color:#edf5f1}
+body.dark #ownerAuth .auth-sub,body.dark #ownerAuth label{color:#b8c9c0}
+body.dark #ownerAuth input{background:#101916;color:#edf5f1;border-color:#40564a}
+@media(max-width:480px){#ownerAuth .seasonal-auth-banner{margin-bottom:14px;padding:9px 10px;font-size:11px}}
 @media(max-width:680px){
  #posScanner{align-items:flex-start!important;justify-content:center!important;padding:calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px)!important}
  #posScanner .pos-scanner-card{width:100%!important;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px)!important;padding:12px!important;border-radius:14px!important}
@@ -482,6 +500,7 @@ button,.navbtn,.iconbtn{min-height:42px}
 <div id="ownerAuth" style="display:none">
  <div class="auth-card">
   <div class="auth-mark">🛒</div>
+  <div class="seasonal-auth-banner" id="seasonalAuthWelcome" aria-live="polite"><span class="seasonal-auth-icon" id="seasonalAuthIcon">🎄</span><span><strong id="seasonalAuthTitle">Season’s Greetings from SINSIN STORE!</strong><small id="seasonalAuthMessage">Wishing you a bright, joyful holiday season.</small></span></div>
   <p class="auth-eyebrow">SINSIN STORE · OWNER ACCESS</p>
   <h1 id="authHeading">Owner sign in</h1>
   <p class="auth-sub" id="authSub">Sign in to continue.</p>
@@ -1081,7 +1100,10 @@ function applyAutomaticSeasonTheme(){
  const garland=document.querySelector(".seasonal-garland");if(garland)garland.style.display=theme.id==="default"?"none":"block";
  const lights=document.querySelector(".seasonal-lights");if(lights)lights.style.display=theme.id==="default"?"none":"flex";
  window.sinsinSeason=theme;
- const welcome=document.getElementById("seasonalWelcome");
+ const authIcon=document.getElementById("seasonalAuthIcon");if(authIcon)authIcon.textContent=theme.icon;
+  const authTitle=document.getElementById("seasonalAuthTitle");if(authTitle)authTitle.textContent=theme.title;
+  const authMessage=document.getElementById("seasonalAuthMessage");if(authMessage)authMessage.textContent=theme.message;
+  const welcome=document.getElementById("seasonalWelcome");
  if(welcome)welcome.innerHTML='<div class="seasonal-welcome"><div><strong>'+theme.icon+' '+theme.title+'</strong><br><small>'+theme.message+'</small></div><span style="font-size:25px">'+theme.symbols[0]+theme.symbols[1]+'</span></div>';
 }
 applyAutomaticSeasonTheme();

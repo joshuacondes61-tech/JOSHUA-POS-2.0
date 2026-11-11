@@ -5,6 +5,7 @@
 <meta name="theme-color" content="#087f70">
 <script>
 document.documentElement.classList.add("auth-pending");
+try { if(sessionStorage.getItem("joshuaPosCloudToken_v1")) document.documentElement.classList.add("auth-silent"); } catch(e) {}
 try {
   const savedPOSTheme = JSON.parse(localStorage.getItem("emeraldSariSari_v1") || "{}");
   if (savedPOSTheme.dark === true) document.documentElement.classList.add("dark-start");
@@ -115,6 +116,7 @@ hr{border:0;border-top:1px solid var(--border);margin:14px 0}
 /* Owner sign-in */
  html.auth-pending body>*:not(#ownerAuth){display:none!important}
  html.auth-pending #ownerAuth{display:grid!important}
+ html.auth-pending.auth-silent #ownerAuth{display:none!important}
  html.auth-pending #ownerAuthForm{display:none!important}
 body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.auth-locked>#toast,body.auth-locked>#printarea{display:none!important}
 #ownerAuth{display:none;position:fixed;inset:0;z-index:9999;place-items:center;padding:20px;background:linear-gradient(135deg,#e7f6f1,#f4f7f6 55%,#dcefe9)}
@@ -522,14 +524,11 @@ async function ownerSignOut(){
   ownerAuthMessage("You have signed out.");
 }
 function ownerAuthLoading(){
-  // Keep the login overlay quiet while the saved session is checked.
-  // Do not show the recurring "Restoring secure session…" message on refresh.
-  ownerAuthScreen();
-  $("authSub").textContent="";
-  $("ownerAuthForm").style.display="none";
-  $("ownerAuthError").textContent="";
-  $("ownerAuth").style.display="grid";
+  // Hide the login card completely while checking an existing session.
+  // Keep the dashboard locked until cloud state is loaded successfully.
+  $("ownerAuth").style.display="none";
   document.body.classList.add("auth-locked");
+  document.documentElement.classList.remove("auth-pending","auth-silent");
 }
 async function ownerAuthBootstrap(){
   const token=cloudToken();

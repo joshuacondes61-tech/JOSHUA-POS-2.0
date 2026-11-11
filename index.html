@@ -613,6 +613,7 @@ let list=db.products.filter(p=>(p.name+" "+p.barcode+" "+p.category).toLowerCase
 $("posproducts").innerHTML=list.map(p=>`<div class="productcard" onclick="addCart('${p.id}')" title="Tap to add"><img src="${p.image||""}" onerror="this.style.visibility='hidden'" alt=""><div class="productinfo"><strong>${esc(p.name)}</strong><small>${p.stock} in stock</small><div class="price">${money(p.price)}</div></div></div>`).join("")||'<div class="empty">No products found. Add products in Inventory.</div>';
 }
 async function startPosScanner(){
+ prepareInventoryScanSound();
  const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
@@ -695,14 +696,22 @@ p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span
 let inventoryQrScanner=null,inventoryScanActive=false;
 let posQrScanner=null,posScanActive=false,posLastScanCode='',posLastScanSeenAt=0;
 let inventoryScanSound=null;
-function playInventoryScanSound(){if(!inventoryScanSound)return;try{inventoryScanSound.currentTime=0;const playback=inventoryScanSound.play();if(playback&&playback.catch)playback.catch(()=>{})}catch(e){}}
+function prepareInventoryScanSound(){
+ if(inventoryScanSound)return;
+ inventoryScanSound=new Audio("https://www.myinstants.com/media/sounds/store-scanner-beep-sound-effect.mp3");
+ inventoryScanSound.preload="auto";inventoryScanSound.volume=0.7;
+}
+function playInventoryScanSound(){
+ prepareInventoryScanSound();
+ if(!inventoryScanSound)return;
+ try{inventoryScanSound.currentTime=0;const playback=inventoryScanSound.play();if(playback&&playback.catch)playback.catch(()=>{})}catch(e){}
+}
 async function startInventoryScanner(){
   const modal=$("inventoryScanner"),status=$("inventoryScanStatus"),reader=$("inventoryScanReader");
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported mobile browser.");return}
   if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection and try again.");return}
+  prepareInventoryScanSound();
   modal.style.display="flex";status.textContent="Allow camera access when your phone asks.";
-  inventoryScanSound=new Audio("https://www.myinstants.com/media/sounds/store-scanner-beep-sound-effect.mp3");
-  inventoryScanSound.preload="auto";inventoryScanSound.volume=0.7;
   reader.innerHTML="";
   try{
     inventoryQrScanner=new Html5Qrcode("inventoryScanReader",{verbose:false});

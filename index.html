@@ -830,7 +830,7 @@ async function startPosScanner(){
   // Slightly brighten the on-screen preview; barcode decoding still uses the
   // original camera frames, so this is only a visibility aid.
   const preview=reader.querySelector("video");
-  if(preview)preview.style.filter="brightness(1.25) contrast(1.08)";
+  if(preview){preview.style.filter="brightness(1.65) contrast(1.12) saturate(1.05)";preview.style.webkitFilter=preview.style.filter;}
  }catch(e){
   if(temporaryStream)temporaryStream.getTracks().forEach(track=>track.stop());
   posScanActive=false;await stopPosScanner();

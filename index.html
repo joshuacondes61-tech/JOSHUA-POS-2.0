@@ -720,22 +720,38 @@ async function startPosScanner(){
  const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
- modal.style.display="flex";resetPosScanFeedback();status.textContent="Starting rear camera…";reader.innerHTML="";
+ modal.style.display="flex";resetPosScanFeedback();status.textContent="Requesting rear camera…";reader.innerHTML="";
  posScanActive=false;posLastScanCode="";posLastScanSeenAt=0;
+ let temporaryStream=null;
  try{
   posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
   const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
   const ua=navigator.userAgent||"";
   const mobile=/Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-  let cameraChoice={facingMode:mobile?"environment":"user"};
-  try{
-   const cameras=await Html5Qrcode.getCameras();
-   if(cameras&&cameras.length){
-    const preferred=mobile?cameras.find(c=>/back|rear|environment|wide/i.test(c.label||"")):cameras.find(c=>/front|user|facetime/i.test(c.label||""));
-    if(preferred)cameraChoice=preferred.id;
-   }
-  }catch(cameraListError){}
-  status.textContent="Camera readying…";
+  let cameraChoice={facingMode:{ideal:mobile?"environment":"user"}};
+  if(mobile){
+   // On iOS, camera labels are often hidden until permission is granted.
+   // Briefly request the rear camera, stop it, then choose its actual device ID.
+   try{
+    temporaryStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"}}});
+    temporaryStream.getTracks().forEach(track=>track.stop());
+    temporaryStream=null;
+   }catch(permissionProbeError){}
+   try{
+    const devices=await navigator.mediaDevices.enumerateDevices();
+    const cameras=devices.filter(device=>device.kind==="videoinput");
+    const rear=cameras.find(device=>/back|rear|environment|world|main/i.test(device.label||"")&&!/front|facetime|selfie/i.test(device.label||""));
+    if(rear)cameraChoice=rear.deviceId;
+    else cameraChoice={facingMode:{exact:"environment"}};
+   }catch(enumerateError){cameraChoice={facingMode:{exact:"environment"}}}
+  }else{
+   try{
+    const devices=await navigator.mediaDevices.enumerateDevices();
+    const front=devices.find(device=>device.kind==="videoinput"&&/front|user|facetime/i.test(device.label||""));
+    if(front)cameraChoice=front.deviceId;
+   }catch(e){}
+  }
+  status.textContent=mobile?"Starting rear camera…":"Starting webcam…";
   posScanActive=true;
   await posQrScanner.start(cameraChoice,{
    fps:mobile?12:18,
@@ -784,17 +800,13 @@ async function startPosScanner(){
   status.textContent=mobile?"Rear camera ready. Center the barcode inside the scan area and hold steady.":"Webcam ready. Hold the barcode steady in the scan area.";
   const button=$("posTorchButton");
   if(button){
-   button.dataset.enabled="false";
-   button.style.display="none";
-   try{
-    const caps=posQrScanner.getRunningTrackCapabilities();
-    if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}
-   }catch(e){}
+   button.dataset.enabled="false";button.style.display="none";
+   try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}
   }
  }catch(e){
-  posScanActive=false;
-  await stopPosScanner();
-  toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.");
+  if(temporaryStream)temporaryStream.getTracks().forEach(track=>track.stop());
+  posScanActive=false;await stopPosScanner();
+  toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the rear camera. Check camera permission and close other camera apps.");
  }
 }
 async function togglePosTorch(){

@@ -810,8 +810,21 @@ async function startPosScanner(){
   const button=$("posTorchButton");
   if(button){
    button.dataset.enabled="false";button.style.display="none";
-   try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}
+   try{
+    const caps=posQrScanner.getRunningTrackCapabilities();
+    if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}
+    // Best-effort exposure boost on browsers/cameras that expose this control.
+    if(caps&&caps.exposureCompensation){
+     const range=caps.exposureCompensation;
+     const boost=Math.min(Number(range.max)||0,Math.max(Number(range.min)||0,1));
+     if(boost>0)await posQrScanner.applyVideoConstraints({advanced:[{exposureCompensation:boost}]});
+    }
+   }catch(e){}
   }
+  // Slightly brighten the on-screen preview; barcode decoding still uses the
+  // original camera frames, so this is only a visibility aid.
+  const preview=reader.querySelector("video");
+  if(preview)preview.style.filter="brightness(1.25) contrast(1.08)";
  }catch(e){
   if(temporaryStream)temporaryStream.getTracks().forEach(track=>track.stop());
   posScanActive=false;await stopPosScanner();

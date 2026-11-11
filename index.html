@@ -641,11 +641,15 @@ p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span
 ]));fillSelects();
 }
 let inventoryQrScanner=null,inventoryScanActive=false;
+let inventoryScanSound=null;
+function playInventoryScanSound(){if(!inventoryScanSound)return;try{inventoryScanSound.currentTime=0;const playback=inventoryScanSound.play();if(playback&&playback.catch)playback.catch(()=>{})}catch(e){}}
 async function startInventoryScanner(){
   const modal=$("inventoryScanner"),status=$("inventoryScanStatus"),reader=$("inventoryScanReader");
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported mobile browser.");return}
   if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection and try again.");return}
   modal.style.display="flex";status.textContent="Allow camera access when your phone asks.";
+  inventoryScanSound=new Audio("https://www.myinstants.com/media/sounds/store-scanner-beep-sound-effect.mp3");
+  inventoryScanSound.preload="auto";inventoryScanSound.volume=0.7;
   reader.innerHTML="";
   try{
     inventoryQrScanner=new Html5Qrcode("inventoryScanReader",{verbose:false});
@@ -676,6 +680,7 @@ async function startInventoryScanner(){
         if(!inventoryScanActive)return;
         inventoryScanActive=false;
         const code=String(decodedText||"").trim();
+        playInventoryScanSound();
         $("pbarcode").value=code;
         await stopInventoryScanner();
         await lookupScannedProduct(code);

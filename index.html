@@ -763,12 +763,12 @@ async function startPosScanner(){
   status.textContent=mobile?"Starting rear camera…":"Starting webcam…";
   posScanActive=true;
   await posQrScanner.start(cameraChoice,{
-   fps:mobile?12:18,
-   qrbox:(w,h)=>({width:Math.max(220,Math.min(900,Math.floor(w*.96))),height:Math.max(100,Math.min(360,Math.floor(h*.72)))}),
+   fps:mobile?15:18,
+   qrbox:(w,h)=>({width:Math.max(220,Math.min(1000,Math.floor(w*.96))),height:Math.max(110,Math.min(400,Math.floor(h*.74)))}),
    aspectRatio:mobile?1.777:1.333,
    disableFlip:true,
    formatsToSupport:formats,
-   videoConstraints:mobile?{facingMode:{exact:"environment"},width:{ideal:1280},height:{ideal:720}}:{width:{ideal:1280},height:{ideal:720}}
+   videoConstraints:mobile?{facingMode:{exact:"environment"},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}}:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}
   },async(decoded)=>{
    if(!posScanActive)return;
    const code=String(decoded||"").trim();
@@ -814,13 +814,18 @@ async function startPosScanner(){
    try{
     const caps=posQrScanner.getRunningTrackCapabilities();
     if(caps&&caps.torch)button.style.display="block";
-    // Best-effort exposure boost on browsers/cameras that expose this control.
+    // Apply only camera controls that this particular device reports.
+    const advanced=[];
+    if(mobile&&Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous"))advanced.push({focusMode:"continuous"});
+    if(mobile&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes("continuous"))advanced.push({exposureMode:"continuous"});
+    if(mobile&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes("continuous"))advanced.push({whiteBalanceMode:"continuous"});
     if(caps&&caps.exposureCompensation){
      const range=caps.exposureCompensation;
      const boost=Math.min(Number(range.max)||0,Math.max(Number(range.min)||0,1));
-     if(boost>0)await posQrScanner.applyVideoConstraints({advanced:[{exposureCompensation:boost}]});
+     if(boost>0)advanced.push({exposureCompensation:boost});
     }
-   }catch(e){}
+    if(advanced.length)await posQrScanner.applyVideoConstraints({advanced});
+   }catch(e){/* Unsupported camera controls must not stop barcode scanning. */}
   }
   // Slightly brighten the on-screen preview; barcode decoding still uses the
   // original camera frames, so this is only a visibility aid.

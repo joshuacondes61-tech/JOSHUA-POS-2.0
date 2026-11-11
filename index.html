@@ -125,6 +125,11 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 #ownerAuth:after{width:300px;height:300px;bottom:-190px;left:-100px}
 #ownerAuth .auth-card{position:relative;z-index:1;width:min(100%,430px);background:rgba(255,255,255,.94);backdrop-filter:blur(18px);border:1px solid #ffffff;border-radius:28px;padding:34px;box-shadow:0 28px 80px #174c3b20,0 3px 12px #174c3b0b;color:#172b27;animation:authCardIn .35s ease-out}
 @keyframes authCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#ownerAuth button.is-loading{position:relative;color:transparent!important;pointer-events:none}
+#ownerAuth button.is-loading:after{content:"";position:absolute;left:50%;top:50%;width:17px;height:17px;margin:-9px 0 0 -9px;border:2px solid #ffffff65;border-top-color:#fff;border-radius:50%;animation:authSpin .7s linear infinite}
+@keyframes authSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#ownerAuth .auth-card,#ownerAuth button.is-loading:after{animation:none!important;transition:none!important}}
+
 #ownerAuth .auth-mark{width:66px;height:66px;border-radius:21px;background:linear-gradient(145deg,#087f70,#0ba58c);display:grid;place-items:center;font-size:32px;margin:0 auto 22px;box-shadow:0 10px 24px #087f7033}
 #ownerAuth .auth-eyebrow{text-align:center;color:#087f70;font-size:10px;font-weight:850;letter-spacing:2px;margin:0 0 10px}
 #ownerAuth h1{font-size:27px;letter-spacing:-.7px;text-align:center;margin:0 0 8px;color:#17382f}
@@ -503,7 +508,11 @@ async function submitOwnerAuth(event){
   const password=$("ownerPassword").value;
   if(username.length<3)return ownerAuthMessage("Username must be at least 3 characters.");
   if(password.length<8)return ownerAuthMessage("Password must be at least 8 characters.");
-  $("ownerAuthSubmit").disabled=true;
+  const submitButton=$("ownerAuthSubmit");
+  const originalButtonText=submitButton.textContent;
+  submitButton.disabled=true;
+  submitButton.classList.add("is-loading");
+  submitButton.textContent="Signing in...";
   try{
     if(ownerSetupMode){
       if(password!==$("ownerPasswordConfirm").value)return ownerAuthMessage("Passwords do not match.");
@@ -520,7 +529,11 @@ async function submitOwnerAuth(event){
     sessionStorage.removeItem(CLOUD_TOKEN_KEY);
     cloudReady=false;
     ownerAuthMessage(error.message||"Could not connect to the cloud service.");
-  }finally{$("ownerAuthSubmit").disabled=false}
+  }finally{
+    submitButton.disabled=false;
+    submitButton.classList.remove("is-loading");
+    submitButton.textContent=originalButtonText;
+  }
 }
 async function ownerSignOut(){
   const token=cloudToken();

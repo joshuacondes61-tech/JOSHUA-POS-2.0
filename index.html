@@ -327,6 +327,29 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 @keyframes navMenuRipple{0%{opacity:.7;transform:scale(.25)}100%{opacity:0;transform:scale(1.6)}}
 @keyframes navIconPop{0%{transform:scale(1) rotate(0)}35%{transform:scale(.72) rotate(-10deg)}70%{transform:scale(1.22) rotate(7deg)}100%{transform:scale(1) rotate(0)}}
 @media(prefers-reduced-motion:reduce){.navbtn.nav-just-clicked,.navbtn.nav-just-clicked:after,.navbtn.nav-just-clicked .ico{animation:none!important}}
+
+/* SINSIN notification center */
+.notification-bell{position:relative;min-width:42px}
+.notification-count{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:20px;background:#dc4545;color:#fff;font-size:10px;font-weight:850;display:grid;place-items:center;border:2px solid var(--card)}
+.notification-panel{position:fixed;z-index:120;top:72px;right:16px;width:min(390px,calc(100vw - 24px));max-height:min(70vh,620px);display:none;flex-direction:column;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 55px #102e2540;overflow:hidden}
+.notification-panel.open{display:flex;animation:notificationIn .2s ease-out}
+@keyframes notificationIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.notification-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-bottom:1px solid var(--border)}
+.notification-head h3{margin:0;font-size:15px}
+.notification-actions{display:flex;gap:6px;flex-wrap:wrap}
+.notification-list{overflow:auto;padding:8px 12px}
+.notification-item{display:flex;gap:10px;padding:12px 7px;border-bottom:1px solid var(--border);border-radius:10px}
+.notification-item.unread{background:var(--pale)}
+.notification-symbol{width:36px;height:36px;flex:0 0 36px;border-radius:12px;display:grid;place-items:center;background:var(--pale);font-size:18px}
+.notification-copy{min-width:0;flex:1}
+.notification-copy strong{display:block;font-size:12px;margin-bottom:3px}
+.notification-copy p{font-size:12px;color:var(--muted);margin:0 0 5px;line-height:1.4;overflow-wrap:anywhere}
+.notification-copy time{font-size:10px;color:var(--muted)}
+.notification-empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:13px}
+.notification-foot{padding:11px 15px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+@media(max-width:680px){.notification-panel{top:64px;right:8px;width:calc(100vw - 16px);max-height:72vh}.notification-head{padding:13px}}
+@media(prefers-reduced-motion:reduce){.notification-panel.open{animation:none!important}}
+
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -355,12 +378,18 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
   <div style="min-width:0"><div class="brandname" id="storetitle">EMERALD STORE</div><small id="storetag">Sari-Sari POS & Inventory</small></div>
  </div>
  <div class="topactions">
+  <button class="iconbtn notification-bell" id="notificationBell" onclick="toggleNotificationCenter()" title="Notifications" aria-label="Notifications" aria-expanded="false">🔔<span class="notification-count" id="notificationCount" style="display:none">0</span></button>
    <button class="iconbtn" onclick="ownerSignOut()" title="Sign out">↪</button>
 
   <button class="iconbtn" data-theme-toggle onclick="toggleDark()" title="Switch to dark mode" aria-label="Switch to dark mode">🌙</button>
   <button class="iconbtn" onclick="navigate('settings')" title="Settings">⚙️</button>
  </div>
 </header>
+<aside class="notification-panel" id="notificationPanel" aria-label="Notification center">
+ <div class="notification-head"><div><h3>🔔 Notifications</h3><small id="notificationSummary">Your store updates</small></div><div class="notification-actions"><button class="secondary sm" onclick="markAllNotificationsRead()">Read all</button><button class="neutral sm" onclick="closeNotificationCenter()" aria-label="Close notifications">✕</button></div></div>
+ <div class="notification-list" id="notificationList"><div class="notification-empty">No notifications yet.</div></div>
+ <div class="notification-foot"><button class="secondary sm" onclick="enablePhoneNotifications()">📱 Enable phone alerts</button><button class="danger sm" onclick="clearNotifications()">Clear all</button></div>
+</aside>
 
 <div class="app">
 <aside class="sidebar">
@@ -796,6 +825,89 @@ let db=loadDB(),cart=[],productImageData="",logoData="",lastReceipt=null,toastTi
 function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){return initial()}}
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}scheduleCloudSave()}
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").style.display="none",2600)}
+
+function notificationStore(){
+ if(!db.settings||typeof db.settings!=="object")db.settings={};
+ if(!Array.isArray(db.settings.notifications))db.settings.notifications=[];
+ if(!db.settings.notificationActiveKeys||typeof db.settings.notificationActiveKeys!=="object")db.settings.notificationActiveKeys={};
+ return db.settings;
+}
+function notificationTime(){
+ return new Date().toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function deliverPhoneNotification(item){
+ if(!db.settings.phoneNotifications||!("Notification" in window)||Notification.permission!=="granted")return;
+ const show=reg=>{try{if(reg&&reg.showNotification)reg.showNotification(item.title,{body:item.message,icon:"./sinsin-store-logo.svg",badge:"./sinsin-store-logo.svg",tag:item.key,renotify:false})}catch(e){}};
+ if("serviceWorker" in navigator)navigator.serviceWorker.ready.then(show).catch(()=>{});
+ else{try{new Notification(item.title,{body:item.message,icon:"./sinsin-store-logo.svg",tag:item.key})}catch(e){}}
+}
+function addStoreNotification(key,type,title,message){
+ const settings=notificationStore();
+ if(settings.notificationActiveKeys[key])return;
+ settings.notificationActiveKeys[key]=true;
+ const item={id:"N"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),key,type,title,message,time:notificationTime(),read:false};
+ settings.notifications.unshift(item);
+ settings.notifications=settings.notifications.slice(0,100);
+ try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}
+ deliverPhoneNotification(item);
+}
+function syncStoreNotifications(){
+ const settings=notificationStore(),active={};
+ (db.products||[]).forEach(p=>{
+  const stock=Number(p.stock||0),min=Number(p.min||0);
+  if(stock<=0){const key="stock-out:"+p.id;active[key]=true;addStoreNotification(key,"danger","Out of stock",p.name+" is out of stock.");}
+  else if(stock<=min){const key="stock-low:"+p.id;active[key]=true;addStoreNotification(key,"warning","Low stock",p.name+" has only "+stock+" left.");}
+  if(p.expiry){
+   const days=Math.ceil((Date.parse(p.expiry+"T00:00:00Z")-Date.parse(today()+"T00:00:00Z"))/86400000);
+   if(days<0){const key="expiry-out:"+p.id;active[key]=true;addStoreNotification(key,"danger","Expired product",p.name+" expired on "+p.expiry+".");}
+   else if(days<=30){const key="expiry-soon:"+p.id;active[key]=true;addStoreNotification(key,"warning","Expiring soon",p.name+" expires in "+days+" day(s).");}
+  }
+ });
+ Object.keys(settings.notificationActiveKeys).forEach(key=>{if((key.startsWith("stock-")||key.startsWith("expiry-"))&&!active[key])delete settings.notificationActiveKeys[key]});
+ renderNotificationCenter();
+}
+function renderNotificationCenter(){
+ const settings=notificationStore(),items=settings.notifications;
+ const unread=items.filter(n=>!n.read).length;
+ const count=$("notificationCount"),list=$("notificationList"),summary=$("notificationSummary");
+ if(count){count.textContent=unread>99?"99+":String(unread);count.style.display=unread?"grid":"none"}
+ if(summary)summary.textContent=unread+" unread · "+items.length+" total";
+ if(list)list.innerHTML=items.length?items.map(n=>'<div class="notification-item '+(n.read?"":"unread")+'"><div class="notification-symbol">'+(n.type==="danger"?"⚠️":n.type==="sale"?"🛍️":"📦")+'</div><div class="notification-copy"><strong>'+esc(n.title)+'</strong><p>'+esc(n.message)+'</p><time>'+esc(n.time||"")+'</time></div>'+(n.read?'':'<button class="secondary sm" onclick="markNotificationRead(\''+esc(n.id)+'\')" title="Mark as read">✓</button>')+'</div>').join(""):'<div class="notification-empty">✨ You’re all caught up!<br>No notifications yet.</div>';
+}
+function toggleNotificationCenter(){
+ const panel=$("notificationPanel"),bell=$("notificationBell");if(!panel)return;
+ const open=!panel.classList.contains("open");panel.classList.toggle("open",open);
+ if(bell)bell.setAttribute("aria-expanded",String(open));
+ if(open)renderNotificationCenter();
+}
+function closeNotificationCenter(){
+ const panel=$("notificationPanel");if(panel)panel.classList.remove("open");
+ const bell=$("notificationBell");if(bell)bell.setAttribute("aria-expanded","false");
+}
+function markNotificationRead(id){
+ const n=notificationStore().notifications.find(x=>x.id===id);if(n)n.read=true;
+ saveDB();renderNotificationCenter();
+}
+function markAllNotificationsRead(){
+ notificationStore().notifications.forEach(n=>n.read=true);saveDB();renderNotificationCenter();
+}
+function clearNotifications(){
+ const settings=notificationStore();settings.notifications=[];
+ saveDB();renderNotificationCenter();
+}
+async function enablePhoneNotifications(){
+ if(!("Notification" in window)){toast("This browser does not support phone notifications.");return}
+ try{
+  const permission=await Notification.requestPermission();
+  if(permission!=="granted"){toast("Phone notifications were not enabled. Check browser notification settings.");return}
+  db.settings.phoneNotifications=true;saveDB();toast("Phone notifications enabled on this device.");renderNotificationCenter();
+ }catch(e){toast("Could not enable phone notifications on this browser.")}
+}
+document.addEventListener("click",event=>{
+ const panel=$("notificationPanel"),bell=$("notificationBell");
+ if(panel&&panel.classList.contains("open")&&!panel.contains(event.target)&&bell&&!bell.contains(event.target))closeNotificationCenter();
+});
+
 function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>{x.classList.toggle("active",x.dataset.page===p);if(x.dataset.page===p){x.classList.remove("nav-just-clicked");void x.offsetWidth;x.classList.add("nav-just-clicked");x.addEventListener("animationend",()=>x.classList.remove("nav-just-clicked"),{once:true})}});window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
 function applyTheme(){
  const dark=!!db.dark;
@@ -814,7 +926,7 @@ function toggleDark(){
  toast(db.dark?"Dark mode enabled":"Light mode enabled");
 }
 function storeHeader(){let s=db.settings;$("storetitle").textContent=s.name||"SINSIN STORE";$("storetag").textContent=s.address||"Sari-Sari POS & Inventory";$("toplogo").src=s.logo||"sinsin-store-logo.svg";$("toplogo").style.display="block";$("logofallback").style.display="none"}
-function refresh(){storeHeader();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
+function refresh(){storeHeader();syncStoreNotifications();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
 function fillSelects(){let cats=[...new Set(db.products.map(p=>p.category||"Others"))].sort();["poscat","invcat"].forEach(id=>{let el=$(id),old=el.value;el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");el.value=old});$("buyproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (Stock: ${p.stock})</option>`).join("")||'<option value="">Add products first</option>';$("buysupplier").innerHTML='<option value="">Unspecified</option>'+db.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}
 function updateStoreGreeting(){
  const heading=$("dashboardGreeting");
@@ -1060,6 +1172,7 @@ let items=cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return {id:p.id,na
 items.forEach(i=>db.products.find(p=>p.id===i.id).stock-=i.qty);
 let sale={id:"S"+Date.now().toString().slice(-9),date:today(),time:new Date().toLocaleTimeString("en-PH"),customer:$("saleCustomer").value.trim(),payment,items,subtotal:a.subtotal,discount:a.discount,total:a.total,cash:payment==="Cash"?cash:a.total,change:payment==="Cash"?cash-a.total:0,cost:items.reduce((n,i)=>n+i.cost*i.qty,0)};
 db.sales.push(sale);
+addStoreNotification("sale:"+sale.id,"sale","Sale completed","Receipt "+sale.id+" · "+money(sale.total)+" · "+(sale.payment||"Payment"));
 if(payment==="Utang / Credit")db.utang.push({id:uid(),name:sale.customer,amount:sale.total,paid:0,date:today(),notes:"POS sale "+sale.id});
 saveDB();lastReceipt=sale;showReceipt(sale);cart=[];$("cash").value="";$("discount").value="0";$("saleCustomer").value="";$("payment").value="Cash";refresh();toast("Sale completed successfully!");}
 function showReceipt(s){

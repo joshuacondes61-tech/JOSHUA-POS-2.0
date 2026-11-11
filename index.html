@@ -379,6 +379,13 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
   <p class="muted" style="margin:10px 0">Point your camera at the product barcode.</p>
   <div id="posScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
   <p id="posScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p>
+  <div id="posScanFeedback" style="margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg)">
+   <div class="between"><strong id="posScanResultTitle">Ready to scan</strong><strong id="posScanCount">0 items scanned</strong></div>
+   <div id="posScanResultName" style="font-weight:700;margin-top:8px">Point the camera at a product barcode.</div>
+   <div id="posScanResultDetail" class="muted" style="font-size:12px;margin-top:3px">Scan feedback will appear here.</div>
+   <div style="margin-top:10px;font-size:13px;font-weight:700">Recent scans</div>
+   <div id="posScanRecent" class="muted" style="font-size:12px;margin-top:5px">No scans yet.</div>
+  </div>
   <button type="button" id="posTorchButton" class="secondary full" style="margin-top:10px;display:none" onclick="togglePosTorch()">🔦 Turn on flashlight</button>
   <p class="muted" style="font-size:12px;margin-top:8px">Continuous scanning: each new scan adds one item. To scan the same product again, briefly move its barcode away, then scan it again. Close the scanner when finished.</p>
  </div>
@@ -612,12 +619,31 @@ let q=($("possearch").value||"").toLowerCase(),cat=$("poscat").value;
 let list=db.products.filter(p=>(p.name+" "+p.barcode+" "+p.category).toLowerCase().includes(q)&&(!cat||p.category===cat));
 $("posproducts").innerHTML=list.map(p=>`<div class="productcard" onclick="addCart('${p.id}')" title="Tap to add"><img src="${p.image||""}" onerror="this.style.visibility='hidden'" alt=""><div class="productinfo"><strong>${esc(p.name)}</strong><small>${p.stock} in stock</small><div class="price">${money(p.price)}</div></div></div>`).join("")||'<div class="empty">No products found. Add products in Inventory.</div>';
 }
+function resetPosScanFeedback(){
+ posScanAcceptedCount=0;posScanRecentItems=[];
+ const count=$("posScanCount"),title=$("posScanResultTitle"),name=$("posScanResultName"),detail=$("posScanResultDetail"),recent=$("posScanRecent");
+ if(count)count.textContent="0 items scanned";
+ if(title){title.textContent="Ready to scan";title.style.color="var(--text)"}
+ if(name)name.textContent="Point the camera at a product barcode.";
+ if(detail)detail.textContent="Scan feedback will appear here.";
+ if(recent)recent.textContent="No scans yet.";
+}
+function showPosScanFeedback(kind,title,name,detail,accepted=false){
+ const titleEl=$("posScanResultTitle"),nameEl=$("posScanResultName"),detailEl=$("posScanResultDetail"),countEl=$("posScanCount"),recentEl=$("posScanRecent");
+ if(titleEl){titleEl.textContent=title;titleEl.style.color=kind==="success"?"#16a34a":kind==="error"?"#dc2626":kind==="warning"?"#d97706":"var(--text)"}
+ if(nameEl)nameEl.textContent=name;
+ if(detailEl)detailEl.textContent=detail;
+ if(accepted)posScanAcceptedCount++;
+ if(countEl)countEl.textContent=posScanAcceptedCount+" item"+(posScanAcceptedCount===1?"":"s")+" scanned";
+ if(accepted){posScanRecentItems.unshift(name);posScanRecentItems=posScanRecentItems.slice(0,5)}
+ if(recentEl)recentEl.textContent=posScanRecentItems.length?posScanRecentItems.map((n,i)=>(i+1)+". "+n).join("  •  "):"No successful scans yet.";
+}
 async function startPosScanner(){
  prepareInventoryScanSound();
  const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
- modal.style.display="flex";status.textContent="Allow camera access when your device asks.";reader.innerHTML="";
+ modal.style.display="flex";resetPosScanFeedback();status.textContent="Allow camera access when your device asks.";reader.innerHTML="";
  try{
   posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
   const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
@@ -629,10 +655,33 @@ async function startPosScanner(){
    const now=Date.now();
    if(code.toLowerCase()===posLastScanCode.toLowerCase()&&now-posLastScanSeenAt<1000){posLastScanSeenAt=now;return}
    posLastScanCode=code;posLastScanSeenAt=now;
-   playInventoryScanSound();
    const product=db.products.find(p=>String(p.barcode||"").trim().toLowerCase()===code.toLowerCase());
-   if(product){addCart(product.id);$("possearch").value="";renderPOS();status.textContent="Added "+product.name+". Scan the next item…"}
-   else{$("possearch").value=code;renderPOS();status.textContent="Barcode not found: "+code+" — scan another item or close the scanner."}
+   if(!product){
+    playInventoryScanSound();
+    $("possearch").value=code;renderPOS();
+    showPosScanFeedback("error","UNKNOWN BARCODE","Barcode: "+code,"Not registered in inventory. Nothing was added.");
+    status.textContent="Unknown barcode. You can scan the next item.";
+    return;
+   }
+   const previous=cart.find(item=>item.id===product.id);
+   const previousQty=previous?previous.qty:0;
+   if(product.stock<=previousQty){
+    showPosScanFeedback("warning","NOT ENOUGH STOCK",product.name,"Available stock: "+product.stock+". No additional quantity was added.");
+    status.textContent="Stock limit reached for "+product.name+". Scan another item.";
+    return;
+   }
+   playInventoryScanSound();
+   addCart(product.id);
+   const updated=cart.find(item=>item.id===product.id);
+   const newQty=updated?updated.qty:previousQty;
+   if(newQty>previousQty){
+    $("possearch").value="";renderPOS();
+    showPosScanFeedback("success","SCAN SUCCESSFUL",product.name,"Barcode: "+code+" • Cart quantity: "+newQty,true);
+    status.textContent="Added "+product.name+". Scan the next item…";
+   }else{
+    showPosScanFeedback("warning","ITEM NOT ADDED",product.name,"Please check the available stock and cart.");
+    status.textContent="Item was not added. Scan another item.";
+   }
   },()=>{
    if(posLastScanCode&&Date.now()-posLastScanSeenAt>900)posLastScanCode="";
   });
@@ -695,6 +744,7 @@ p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span
 }
 let inventoryQrScanner=null,inventoryScanActive=false;
 let posQrScanner=null,posScanActive=false,posLastScanCode='',posLastScanSeenAt=0;
+let posScanAcceptedCount=0,posScanRecentItems=[];
 let inventoryScanSound=null;
 function prepareInventoryScanSound(){
  if(inventoryScanSound)return;

@@ -292,6 +292,19 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  .dash-hero-actions{position:relative;z-index:4}
 }
 @media(prefers-reduced-motion:reduce){.mascot-bounce,.mascot-wave,.mascot-speech,.mascot-sparkles{animation:none!important}}
+
+/* Navigation menu click choreography */
+.navbtn{position:relative;isolation:isolate;overflow:hidden;transform-origin:center;transition:background .22s ease,color .22s ease,transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+.navbtn:after{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;background:radial-gradient(circle at center,#ffffff55 0,transparent 68%);opacity:0;transform:scale(.25);pointer-events:none}
+.navbtn.active{box-shadow:inset 3px 0 0 var(--green2),0 4px 13px #087f7010}
+.navbtn.active .ico{filter:drop-shadow(0 2px 3px #087f7030)}
+.navbtn.nav-just-clicked{animation:navMenuTap .42s cubic-bezier(.2,.8,.2,1)}
+.navbtn.nav-just-clicked:after{animation:navMenuRipple .42s ease-out}
+.navbtn.nav-just-clicked .ico{animation:navIconPop .48s cubic-bezier(.2,.8,.2,1)}
+@keyframes navMenuTap{0%{transform:scale(1)}38%{transform:scale(.965)}72%{transform:scale(1.018)}100%{transform:scale(1)}}
+@keyframes navMenuRipple{0%{opacity:.7;transform:scale(.25)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes navIconPop{0%{transform:scale(1) rotate(0)}35%{transform:scale(.72) rotate(-10deg)}70%{transform:scale(1.22) rotate(7deg)}100%{transform:scale(1) rotate(0)}}
+@media(prefers-reduced-motion:reduce){.navbtn.nav-just-clicked,.navbtn.nav-just-clicked:after,.navbtn.nav-just-clicked .ico{animation:none!important}}
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -761,7 +774,7 @@ let db=loadDB(),cart=[],productImageData="",logoData="",lastReceipt=null,toastTi
 function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){return initial()}}
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}scheduleCloudSave()}
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").style.display="none",2600)}
-function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===p));window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
+function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>{x.classList.toggle("active",x.dataset.page===p);if(x.dataset.page===p){x.classList.remove("nav-just-clicked");void x.offsetWidth;x.classList.add("nav-just-clicked");x.addEventListener("animationend",()=>x.classList.remove("nav-just-clicked"),{once:true})}});window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
 function applyTheme(){
  const dark=!!db.dark;
  document.body.classList.toggle("dark",dark);

@@ -267,6 +267,11 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 }
 @media(prefers-reduced-motion:reduce){.dashboard-page .chartbar{animation:none!important}}
 
+
+/* Voice alert control */
+.dash-hero-actions .dash-voice-button{background:#ffffff20;color:#fff;border:1px solid #ffffff55;box-shadow:none}
+.dash-hero-actions .dash-voice-button.voice-alert-on{background:#d1fae5;color:#065f46;border-color:#d1fae5}
+@media(max-width:680px){.dash-hero-actions .dash-voice-button{flex-basis:100%}}
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -321,7 +326,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 <main class="main">
 <section class="page active dashboard-page" id="page-dashboard">
- <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1 id="dashboardGreeting">Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
+ <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1 id="dashboardGreeting">Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button><button type="button" class="dash-voice-button" id="voiceAlertToggle" onclick="toggleVoiceAlerts()" aria-pressed="false">🔊 Enable voice alerts</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
  <div class="grid dashgrid">
   <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
   <div class="card stat"><div><small>Gross profit today</small><div class="num" id="dashprofit">₱0.00</div><small>Sales less item cost</small></div><div class="emoji">📈</div></div>
@@ -767,6 +772,73 @@ if(!window.__sinsinGreetingTimer){
  updateStoreGreeting();
  window.__sinsinGreetingTimer=setInterval(updateStoreGreeting,60000);
 }
+
+let voiceAlertEnabled=localStorage.getItem("sinsinVoiceAlerts_v1")==="1";
+let voiceAlertReady=false;
+let lastVoiceAlertSignature="";
+function updateVoiceAlertButton(){
+ const button=$("voiceAlertToggle");
+ if(!button)return;
+ button.textContent=voiceAlertEnabled?"🔊 Voice alerts: ON":"🔊 Enable voice alerts";
+ button.setAttribute("aria-pressed",String(voiceAlertEnabled));
+ button.title=voiceAlertEnabled?"Turn off spoken store warnings":"Enable spoken store warnings";
+ button.classList.toggle("voice-alert-on",voiceAlertEnabled);
+}
+function speakStoreMessage(message){
+ if(!voiceAlertEnabled||!voiceAlertReady||!message||!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined")return;
+ window.speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(message);
+ utterance.lang="en-PH";
+ utterance.rate=0.94;
+ utterance.pitch=1;
+ window.speechSynthesis.speak(utterance);
+}
+function announceDashboardWarnings(out,low,expiryAlerts){
+ window.__sinsinCurrentWarnings={out,low,expiryAlerts};
+ const expiryProducts=db.products.filter(p=>p.expiry&&p.expiry<=new Date(Date.now()+30*86400000).toISOString().slice(0,10));
+ const signature=JSON.stringify({
+  out:out.map(p=>[p.id,p.name,p.stock]),
+  low:low.map(p=>[p.id,p.name,p.stock]),
+  expiry:expiryProducts.map(p=>[p.id,p.name,p.expiry])
+ });
+ if(!voiceAlertEnabled||!voiceAlertReady)return;
+ if(signature===lastVoiceAlertSignature)return;
+ lastVoiceAlertSignature=signature;
+ const expired=expiryProducts.filter(p=>p.expiry<today());
+ const expiring=expiryProducts.filter(p=>p.expiry>=today());
+ if(!out.length&&!low.length&&!expiryProducts.length)return;
+ const parts=["Attention. SINSIN STORE inventory warning."];
+ if(out.length)parts.push(out.length+" product"+(out.length===1?" is":"s are")+" out of stock"+(out.length<=3?": "+out.map(p=>p.name).join(", "):"."));
+ if(low.length)parts.push(low.length+" product"+(low.length===1?" has":"s have")+" low stock"+(low.length<=3?": "+low.map(p=>p.name+", "+p.stock+" remaining").join("; "):"."));
+ if(expired.length)parts.push(expired.length+" product"+(expired.length===1?" has":"s have")+" expired"+(expired.length<=3?": "+expired.map(p=>p.name).join(", "):"."));
+ if(expiring.length)parts.push(expiring.length+" product"+(expiring.length===1?" is":"s are")+" expiring within 30 days"+(expiring.length<=3?": "+expiring.map(p=>p.name).join(", "):"."));
+ speakStoreMessage(parts.join(" "));
+}
+function toggleVoiceAlerts(){
+ if(!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined"){toast("Voice alerts are not supported by this browser.");return}
+ voiceAlertEnabled=!voiceAlertEnabled;
+ localStorage.setItem("sinsinVoiceAlerts_v1",voiceAlertEnabled?"1":"0");
+ updateVoiceAlertButton();
+ if(voiceAlertEnabled){
+  voiceAlertReady=true;
+  lastVoiceAlertSignature="";
+  speakStoreMessage("SINSIN STORE voice alerts are now enabled.");
+  const w=window.__sinsinCurrentWarnings;
+  if(w)announceDashboardWarnings(w.out,w.low,w.expiryAlerts);
+  toast("Voice alerts enabled.");
+ }else{
+  voiceAlertReady=false;
+  window.speechSynthesis.cancel();
+  toast("Voice alerts turned off.");
+ }
+}
+document.addEventListener("click",function(){
+ if(voiceAlertEnabled&&!voiceAlertReady){
+  voiceAlertReady=true;
+  const w=window.__sinsinCurrentWarnings;
+  if(w)announceDashboardWarnings(w.out,w.low,w.expiryAlerts);
+ }
+},{capture:true});
 function renderDashboard(){
 const sales=db.sales.filter(s=>s.date===today());
 const revenue=sales.reduce((a,s)=>a+Number(s.total||0),0);
@@ -798,6 +870,7 @@ const alerts=[
  ...expiryAlerts
 ].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 $("dashalerts").innerHTML=alerts.map(a=>a.html).join("")||'<div class="empty">✨ Everything looks good!</div>';
+announceDashboardWarnings(out,low,expiryAlerts);
 const sold={};
 sales.forEach(s=>(s.items||[]).forEach(i=>{const name=i.name||"Unnamed product";sold[name]=(sold[name]||0)+Number(i.qty||0)}));
 const top=Object.entries(sold).sort((a,b)=>b[1]-a[1]).slice(0,6);

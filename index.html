@@ -405,6 +405,55 @@ body.season-default .seasonal-garland,body.season-default .seasonal-lights{displ
 .seasonal-welcome strong{font-size:14px}.seasonal-welcome small{opacity:.88}
 @media(prefers-reduced-motion:reduce){.seasonal-lights i,.seasonal-snow span{animation:none!important}}
 
+
+/* Cross-device layout and touch usability */
+html,body{max-width:100%;overflow-x:hidden}
+img,svg,video,canvas{max-width:100%}
+button,a,input,select,textarea{touch-action:manipulation}
+button,.navbtn,.iconbtn{min-height:42px}
+.seasonal-garland,.seasonal-lights,.seasonal-snow{pointer-events:none!important}
+.seasonal-snow{overflow:hidden;contain:strict}
+#seasonalWelcome{max-width:100%;min-width:0}
+#seasonalWelcome .seasonal-welcome{max-width:100%;min-width:0;overflow-wrap:anywhere}
+.notification-panel{padding-bottom:env(safe-area-inset-bottom)}
+.notification-list{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+@media(max-width:760px){
+ .app{width:100%;max-width:100%;min-width:0}
+ .main,.main-content,.content,.page-content{min-width:0;max-width:100%;width:100%}
+ .dashboard-grid,.stats-grid,.stat-grid,.metric-grid,.cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .seasonal-welcome{padding:10px 12px;gap:8px}
+ .seasonal-welcome strong{font-size:13px}
+ .seasonal-welcome small{font-size:11px;line-height:1.35}
+ .seasonal-snow span{opacity:.32;font-size:9px}
+ .notification-panel{top:calc(58px + env(safe-area-inset-top));right:8px;width:calc(100vw - 16px);max-height:calc(78dvh - env(safe-area-inset-top));border-radius:16px}
+ .notification-head,.notification-foot{gap:6px;flex-wrap:wrap}
+ .notification-foot button{flex:1;min-width:0;padding:9px 7px;font-size:11px}
+ .notification-actions button{padding:8px 9px}
+}
+@media(max-width:420px){
+ .dashboard-grid,.stats-grid,.stat-grid,.metric-grid,.cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .seasonal-garland{height:4px}
+ .seasonal-lights{top:4px;height:8px}
+ .seasonal-lights i{width:4px;height:6px}
+ .seasonal-welcome{margin-bottom:9px}
+ .seasonal-welcome span{font-size:20px!important}
+ .notification-panel{right:6px;width:calc(100vw - 12px)}
+}
+@media(max-width:340px){
+ .dashboard-grid,.stats-grid,.stat-grid,.metric-grid,.cards-grid{grid-template-columns:minmax(0,1fr)!important}
+ .seasonal-welcome{align-items:flex-start}
+}
+@media(orientation:landscape) and (max-height:500px){
+ .notification-panel{max-height:80vh;top:48px}
+ .seasonal-snow{opacity:.45}
+}
+@supports(padding:max(0px)){
+ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>

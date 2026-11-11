@@ -754,14 +754,6 @@ async function startPosScanner(){
     }catch(enumerateError){cameraChoice={facingMode:{exact:"environment"}}}
    }
   }else{
-    try{
-     const devices=await navigator.mediaDevices.enumerateDevices();
-     const cameras=devices.filter(device=>device.kind==="videoinput");
-     const rear=cameras.find(device=>/back|rear|environment|world|main/i.test(device.label||"")&&!/front|facetime|selfie/i.test(device.label||""));
-     cameraChoice=rear?rear.deviceId:{facingMode:{exact:"environment"}};
-    }catch(enumerateError){cameraChoice={facingMode:{exact:"environment"}}}
-   }
-  }else{
    try{
     const devices=await navigator.mediaDevices.enumerateDevices();
     const front=devices.find(device=>device.kind==="videoinput"&&/front|user|facetime/i.test(device.label||""));

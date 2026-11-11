@@ -174,6 +174,46 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  #posScanFeedback{padding:9px!important}
 }
 
+/* App-like SINSIN STORE dashboard */
+.dashboard-page{animation:dashPageIn .32s ease-out}
+@keyframes dashPageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.dash-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:170px;margin-bottom:18px;padding:26px 30px;border-radius:22px;background:linear-gradient(118deg,#075e52 0%,#087f70 48%,#12a58b 100%);color:#fff;box-shadow:0 14px 32px #087f7024}
+.dash-hero-copy{position:relative;z-index:2}
+.dash-kicker{display:inline-block;margin-bottom:8px;font-size:10px;font-weight:850;letter-spacing:2px;color:#c9f6e9}
+.dash-hero h1{margin:0 0 5px;font-size:clamp(24px,3vw,32px);letter-spacing:-.8px;color:#fff}
+.dash-hero p{margin:0 0 14px;color:#dcf8ef;font-size:13px}
+.dash-date{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid #ffffff38;border-radius:20px;background:#ffffff18;color:#fff;font-size:11px;font-weight:750}
+.dash-hero-actions{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:9px}
+.dash-hero-actions button{min-height:42px;padding:10px 15px;border:1px solid #ffffff38;border-radius:12px;background:#fff;color:#087565;font-weight:800;box-shadow:0 5px 14px #003c3322}
+.dash-hero-actions .dash-hero-secondary{background:#ffffff18;color:#fff;box-shadow:none}
+.dash-hero-orb{position:absolute;z-index:1;width:230px;height:230px;right:20%;top:-115px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 28px #ffffff09,0 0 0 58px #ffffff08;pointer-events:none}
+.dashboard-page .dashgrid{gap:13px;margin-bottom:18px}
+.dashboard-page .stat{position:relative;overflow:hidden;min-height:112px;padding:17px;border-radius:17px;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.dashboard-page .stat:hover{transform:translateY(-3px);box-shadow:0 12px 25px #173d3214;border-color:#0ba58c55}
+.dashboard-page .stat>div:first-child{min-width:0}
+.dashboard-page .stat small{font-size:11px;font-weight:650}
+.dashboard-page .stat .num{font-size:clamp(20px,2vw,26px);margin:9px 0 4px;letter-spacing:-.9px}
+.dashboard-page .stat .emoji{width:44px;height:44px;border-radius:14px;font-size:21px;background:linear-gradient(145deg,var(--pale),var(--card));border:1px solid var(--border)}
+.dashboard-page .grid2>.card,.dashboard-page>.card{border-radius:18px;padding:19px}
+.dashboard-page .card h2{font-size:15px;letter-spacing:-.2px}
+.dashboard-page .chart{height:185px}
+.dashboard-page .chartbar{max-width:42px;box-shadow:0 4px 10px #087f7022;transition:height .35s ease,filter .2s ease}
+.dashboard-page .chartcol:hover .chartbar{filter:brightness(1.15)}
+.dashboard-page .grid2[style*="margin-top"]{margin-top:18px!important}
+.dashboard-page .stack>div{padding:9px 0;border-bottom:1px solid var(--border)}
+.dashboard-page .stack>div:last-child{border-bottom:0}
+@media(max-width:680px){
+ .dash-hero{min-height:0;align-items:flex-start;flex-direction:column;gap:17px;padding:22px 19px;border-radius:19px}
+ .dash-hero-actions{width:100%}.dash-hero-actions button{flex:1}
+ .dash-hero-orb{right:-95px;top:-115px}
+ .dashboard-page .dashgrid{gap:9px}
+ .dashboard-page .stat{min-height:105px;padding:12px;border-radius:15px}
+ .dashboard-page .stat .num{font-size:clamp(17px,5vw,22px)}
+ .dashboard-page .stat .emoji{width:34px;height:34px;font-size:17px;border-radius:11px}
+ .dashboard-page .grid2>.card,.dashboard-page>.card{padding:15px;border-radius:16px}
+ .dashboard-page .chart{height:155px}
+}
+@media(prefers-reduced-motion:reduce){.dashboard-page,.dashboard-page .stat,.dashboard-page .chartbar{animation:none!important;transition:none!important}}
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -227,8 +267,8 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 </aside>
 
 <main class="main">
-<section class="page active" id="page-dashboard">
- <div class="pagehead"><div><h1>Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p></div><span class="badge" id="todaybadge"></span></div>
+<section class="page active dashboard-page" id="page-dashboard">
+ <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1>Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
  <div class="grid dashgrid">
   <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
   <div class="card stat"><div><small>Gross profit today</small><div class="num" id="dashprofit">₱0.00</div><small>Sales less item cost</small></div><div class="emoji">📈</div></div>

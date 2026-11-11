@@ -522,8 +522,10 @@ async function ownerSignOut(){
   ownerAuthMessage("You have signed out.");
 }
 function ownerAuthLoading(){
-  $("authHeading").textContent="Restoring secure session…";
-  $("authSub").textContent="Checking your cloud account. Please wait.";
+  // Keep the login overlay quiet while the saved session is checked.
+  // Do not show the recurring "Restoring secure session…" message on refresh.
+  ownerAuthScreen();
+  $("ownerAuthSub").textContent="";
   $("ownerAuthForm").style.display="none";
   $("ownerAuthError").textContent="";
   $("ownerAuth").style.display="grid";

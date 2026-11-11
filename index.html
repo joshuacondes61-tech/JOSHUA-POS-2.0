@@ -156,7 +156,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  <div class="topactions">
    <button class="iconbtn" onclick="ownerSignOut()" title="Sign out">↪</button>
 
-  <button class="iconbtn" onclick="toggleDark()" title="Dark mode">🌙</button>
+  <button class="iconbtn" data-theme-toggle onclick="toggleDark()" title="Switch to dark mode" aria-label="Switch to dark mode">🌙</button>
   <button class="iconbtn" onclick="navigate('settings')" title="Settings">⚙️</button>
  </div>
 </header>
@@ -346,7 +346,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
   </form></div>
   <div class="card"><h2>💾 Data backup</h2><p class="muted">Export your products, sales, suppliers, purchases, expenses, and utang records to a JSON backup file. Store it somewhere safe.</p>
    <div class="stack"><button onclick="backupData()">⬇ Download full backup</button><div class="field"><label>Restore a JSON backup</label><input id="restorefile" type="file" accept=".json,application/json"></div><button class="secondary" onclick="restoreData()">Restore backup</button><button class="danger" onclick="clearAllData()">Delete all store data</button></div>
-   <hr><h3>Display</h3><button class="secondary full" onclick="toggleDark()">🌙 Toggle dark mode</button>
+   <hr><h3>Display</h3><button class="secondary full" data-theme-toggle onclick="toggleDark()">🌙 Toggle dark mode</button>
   </div>
  </div>
  <div class="card" style="margin-top:16px"><h2>About this POS</h2><p class="muted">The JOSHUA POS and Inventory Management System is a mobile-friendly application designed to simplify daily store operations. It helps manage product inventory, process sales, calculate change, print receipts, and monitor sales reports.</p><p class="muted">Developed and Managed by: Joshua Condes.</p></div>
@@ -426,7 +426,7 @@ function applyCloudState(state){
   const base=initial();
   db={...base,...state,settings:{...base.settings,...(state.settings||{})}};
   try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast("Cloud data loaded, but the local cache could not be saved.")}
-  document.body.classList.toggle("dark",!!db.dark);
+  applyTheme();
   storeHeader();refresh();
 }
 async function uploadCloudState(){
@@ -569,7 +569,22 @@ function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KE
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}scheduleCloudSave()}
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").style.display="none",2600)}
 function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===p));window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
-function toggleDark(){db.dark=!db.dark;document.body.classList.toggle("dark",db.dark);saveDB();toast(db.dark?"Dark mode enabled":"Light mode enabled")}
+function applyTheme(){
+ const dark=!!db.dark;
+ document.body.classList.toggle("dark",dark);
+ document.documentElement.classList.remove("dark-start");
+ document.querySelectorAll("[data-theme-toggle]").forEach(button=>{
+  button.textContent=dark?"☀️":"🌙";
+  button.title=dark?"Switch to light mode":"Switch to dark mode";
+  button.setAttribute("aria-label",button.title);
+ });
+}
+function toggleDark(){
+ db.dark=!db.dark;
+ applyTheme();
+ saveDB();
+ toast(db.dark?"Dark mode enabled":"Light mode enabled");
+}
 function storeHeader(){let s=db.settings;$("storetitle").textContent=s.name||"SINSIN STORE";$("storetag").textContent=s.address||"Sari-Sari POS & Inventory";$("toplogo").src=s.logo||"sinsin-store-logo.svg";$("toplogo").style.display="block";$("logofallback").style.display="none"}
 function refresh(){storeHeader();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
 function fillSelects(){let cats=[...new Set(db.products.map(p=>p.category||"Others"))].sort();["poscat","invcat"].forEach(id=>{let el=$(id),old=el.value;el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");el.value=old});$("buyproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (Stock: ${p.stock})</option>`).join("")||'<option value="">Add products first</option>';$("buysupplier").innerHTML='<option value="">Unspecified</option>'+db.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}

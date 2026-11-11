@@ -134,7 +134,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
    <button id="ownerAuthSubmit" type="submit">Sign in</button>
    <p class="auth-error" id="ownerAuthError" role="alert"></p>
   </form>
-  <p class="auth-note">This owner login is saved in this browser only. Store records remain in this browser's local storage and do not automatically sync to other devices.</p>
+  <p class="auth-note">Owner login and store records are securely stored in your cloud database. Changes sync automatically when you are online.</p>
  </div>
 </div>
 
@@ -354,29 +354,62 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 const KEY="emeraldSariSari_v1";
 const $=id=>document.getElementById(id);
 
-const OWNER_AUTH_KEY="joshuaPosOwnerAuth_v1";
-const OWNER_SESSION_KEY="joshuaPosOwnerSession_v1";
+const CLOUD_API="https://joshua-pos-2.wasmer.app/api.php";
+const CLOUD_TOKEN_KEY="joshuaPosCloudToken_v1";
 let ownerSetupMode=false;
+let cloudReady=false,cloudRevision=0,cloudSaveTimer=null,cloudSaveBusy=false,cloudSaveAgain=false;
 function ownerAuthMessage(message){$("ownerAuthError").textContent=message}
 function ownerAuthScreen(){
-  ownerSetupMode=!localStorage.getItem(OWNER_AUTH_KEY);
-  $("authHeading").textContent=ownerSetupMode?"Create owner account":"Owner sign in";
-  $("authSub").textContent=ownerSetupMode?"Set up the one owner account for this store.":"Sign in to open your JOSHUA POS store workspace.";
-  $("ownerAuthSubmit").textContent=ownerSetupMode?"Create owner account":"Sign in";
+  $("authHeading").textContent=ownerSetupMode?"Create cloud owner account":"Owner sign in";
+  $("authSub").textContent=ownerSetupMode?"Create the one owner account for this store. Your login will work across devices.":"Sign in to open your cloud-connected JOSHUA POS workspace.";
+  $("ownerAuthSubmit").textContent=ownerSetupMode?"Create cloud account":"Sign in";
   $("confirmPasswordField").style.display=ownerSetupMode?"block":"none";
   $("ownerPassword").autocomplete=ownerSetupMode?"new-password":"current-password";
   $("ownerPasswordConfirm").required=ownerSetupMode;
+  $("ownerUsername").maxLength=80;
 }
-async function ownerPasswordHash(password,salt){
-  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
-  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:210000,hash:"SHA-256"},key,256);
-  return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,"0")).join("");
+function cloudToken(){return sessionStorage.getItem(CLOUD_TOKEN_KEY)||""}
+async function cloudRequest(action,options={}){
+  const headers={"Accept":"application/json",...(options.headers||{})};
+  if(options.body!==undefined)headers["Content-Type"]="application/json";
+  const token=cloudToken();
+  if(token)headers.Authorization="Bearer "+token;
+  const response=await fetch(CLOUD_API+"?action="+encodeURIComponent(action),{...options,headers,cache:"no-store"});
+  let data={};try{data=await response.json()}catch(e){}
+  if(!response.ok){const error=new Error(data.error||("Cloud request failed ("+response.status+")."));error.status=response.status;throw error}
+  return data;
 }
-function bytesFromHex(hex){return new Uint8Array(hex.match(/.{1,2}/g).map(x=>parseInt(x,16)))}
+function cloudStatePayload(){return {products:db.products||[],sales:db.sales||[],suppliers:db.suppliers||[],purchases:db.purchases||[],expenses:db.expenses||[],utang:db.utang||[],settings:db.settings||{},dark:!!db.dark}}
+function applyCloudState(state){
+  const base=initial();
+  db={...base,...state,settings:{...base.settings,...(state.settings||{})}};
+  try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast("Cloud data loaded, but the local cache could not be saved.")}
+  document.body.classList.toggle("dark",!!db.dark);
+  storeHeader();refresh();
+}
+async function uploadCloudState(){
+  const result=await cloudRequest("state",{method:"PUT",body:JSON.stringify({state:cloudStatePayload(),expectedRevision:cloudRevision})});
+  cloudRevision=Number(result.revision||cloudRevision+1);
+  cloudReady=true;
+}
+async function openCloudWorkspace(){
+  const result=await cloudRequest("state",{method:"GET"});
+  cloudRevision=Number(result.revision||0);
+  if(cloudRevision===0){
+    // First cloud setup: preserve and migrate this browser's existing records.
+    await uploadCloudState();
+    toast("Cloud account ready. This device's POS data was uploaded.");
+  }else{
+    // Existing cloud data is authoritative on every newly signed-in device.
+    applyCloudState(result.state||{});
+    cloudReady=true;
+    toast("Cloud data loaded successfully.");
+  }
+  ownerAuthUnlock();
+}
 function ownerAuthUnlock(){
-  sessionStorage.setItem(OWNER_SESSION_KEY,"active");
-  document.body.classList.remove("auth-locked");
   $("ownerAuth").style.display="none";
+  document.body.classList.remove("auth-locked");
 }
 async function submitOwnerAuth(event){
   event.preventDefault();ownerAuthMessage("");
@@ -384,37 +417,74 @@ async function submitOwnerAuth(event){
   const password=$("ownerPassword").value;
   if(username.length<3)return ownerAuthMessage("Username must be at least 3 characters.");
   if(password.length<8)return ownerAuthMessage("Password must be at least 8 characters.");
+  $("ownerAuthSubmit").disabled=true;
   try{
     if(ownerSetupMode){
       if(password!==$("ownerPasswordConfirm").value)return ownerAuthMessage("Passwords do not match.");
-      if(localStorage.getItem(OWNER_AUTH_KEY))return ownerAuthScreen();
-      const salt=crypto.getRandomValues(new Uint8Array(16));
-      const saltHex=Array.from(salt,b=>b.toString(16).padStart(2,"0")).join("");
-      const hash=await ownerPasswordHash(password,salt);
-      localStorage.setItem(OWNER_AUTH_KEY,JSON.stringify({username,salt:saltHex,hash,createdAt:new Date().toISOString()}));
-      ownerAuthUnlock();toast("Owner account created. Welcome!");
+      const result=await cloudRequest("setup",{method:"POST",body:JSON.stringify({username,password})});
+      sessionStorage.setItem(CLOUD_TOKEN_KEY,result.token);
+      await openCloudWorkspace();
     }else{
-      const account=JSON.parse(localStorage.getItem(OWNER_AUTH_KEY)||"null");
-      if(!account||username!==account.username)return ownerAuthMessage("Incorrect username or password.");
-      const hash=await ownerPasswordHash(password,bytesFromHex(account.salt));
-      if(hash!==account.hash)return ownerAuthMessage("Incorrect username or password.");
-      ownerAuthUnlock();toast("Signed in successfully.");
+      const result=await cloudRequest("login",{method:"POST",body:JSON.stringify({username,password})});
+      sessionStorage.setItem(CLOUD_TOKEN_KEY,result.token);
+      await openCloudWorkspace();
     }
-  }catch(error){ownerAuthMessage("Sign-in setup is unavailable in this browser. Please use the secure HTTPS website.");}
+    $("ownerPassword").value="";$("ownerPasswordConfirm").value="";
+  }catch(error){
+    sessionStorage.removeItem(CLOUD_TOKEN_KEY);
+    cloudReady=false;
+    ownerAuthMessage(error.message||"Could not connect to the cloud service.");
+  }finally{$("ownerAuthSubmit").disabled=false}
 }
-function ownerSignOut(){
-  sessionStorage.removeItem(OWNER_SESSION_KEY);
-  $("ownerPassword").value="";
-  $("ownerPasswordConfirm").value="";
+async function ownerSignOut(){
+  const token=cloudToken();
+  cloudReady=false;
+  sessionStorage.removeItem(CLOUD_TOKEN_KEY);
+  if(token){try{await fetch(CLOUD_API+"?action=logout",{method:"POST",headers:{Authorization:"Bearer "+token}})}catch(e){}}
+  $("ownerPassword").value="";$("ownerPasswordConfirm").value="";
   $("ownerAuth").style.display="grid";
   document.body.classList.add("auth-locked");
   ownerAuthScreen();
+  ownerAuthMessage("You have signed out.");
 }
-function ownerAuthBootstrap(){
-  ownerAuthScreen();
-  if(sessionStorage.getItem(OWNER_SESSION_KEY)==="active"){
-    $("ownerAuth").style.display="none";
-    document.body.classList.remove("auth-locked");
+async function ownerAuthBootstrap(){
+  ownerAuthMessage("");
+  $("ownerAuthSubmit").disabled=true;
+  try{
+    const status=await cloudRequest("auth_status",{method:"GET"});
+    ownerSetupMode=!status.configured;
+    ownerAuthScreen();
+    const token=cloudToken();
+    if(token){
+      try{await openCloudWorkspace();return}
+      catch(error){sessionStorage.removeItem(CLOUD_TOKEN_KEY);cloudReady=false;if(error.status!==401)ownerAuthMessage(error.message)}
+    }
+    $("ownerAuth").style.display="grid";
+    document.body.classList.add("auth-locked");
+  }catch(error){
+    ownerSetupMode=false;ownerAuthScreen();
+    ownerAuthMessage("Cannot reach the cloud service. Check your connection and reload this page.");
+    $("ownerAuth").style.display="grid";
+    document.body.classList.add("auth-locked");
+  }finally{$("ownerAuthSubmit").disabled=false}
+}
+function scheduleCloudSave(){
+  if(!cloudReady)return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(pushCloudState,700);
+}
+async function pushCloudState(){
+  if(!cloudReady)return;
+  if(cloudSaveBusy){cloudSaveAgain=true;return}
+  cloudSaveBusy=true;
+  try{await uploadCloudState()}
+  catch(error){
+    if(error.status===401){cloudReady=false;sessionStorage.removeItem(CLOUD_TOKEN_KEY);$("ownerAuth").style.display="grid";document.body.classList.add("auth-locked");ownerAuthMessage("Your cloud session expired. Please sign in again.")}
+    else if(error.status===409){cloudReady=false;toast("Cloud data changed elsewhere. Sign out and sign in again to load the latest version.")}
+    else toast("Cloud save failed. Your data remains saved on this device.")
+  }finally{
+    cloudSaveBusy=false;
+    if(cloudSaveAgain){cloudSaveAgain=false;scheduleCloudSave()}
   }
 }
 
@@ -426,7 +496,7 @@ const localDate=s=>s?new Date(s.length===10?s+"T12:00:00":s).toLocaleDateString(
 const initial=()=>({products:[],sales:[],suppliers:[],purchases:[],expenses:[],utang:[],settings:{name:"EMERALD STORE",address:"",phone:"",footer:"Thank you for shopping!"},dark:false});
 let db=loadDB(),cart=[],productImageData="",logoData="",lastReceipt=null,toastTimer;
 function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){return initial()}}
-function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}}
+function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}scheduleCloudSave()}
 // Adds the supplied product names to the catalog once, without replacing existing records.
 const catalogProductNames = ["COCA COLA 1L", "MILO", "MEGA SARDINES", "MAGIC SARAP", "KOPIKO BLANCA", "PEPSI GAMAY", "COKE GAMAY", "ENERGEN", "KERATIN SHAMPOO", "KERATIN CONDITIONER", "STING", "YAKULT", "MIK MIK", "MOUNTAIN DEW BOTTLE", "ROYAL PLASTIC", "MOUNTAIN DEW PLASTIC", "ROYAL 1 LTR", "ROYAL BOTTLE", "TANDUAY LIGHT SR.", "TANDUAY LIGHT JR.", "TANDUAY LIGHT LONG NECK", "TANDUAY DARK", "GENEBRA ROUND", "GENEBRA", "EMPERADOR LIGHT JR.", "EMPERADOR LIGHT SR.", "YOUNGSTOWN SARDINES", "LUCK7 SARDINES", "FAMILY SARDINES", "ARGENTINA CORNED BEEF", "LUCK 7 CORNED BEEF", "MEATY CORNED BEEF", "ARGENTINA BEEF LOAF", "FIESTA BEEFLOAF", "HOLIDAY BEEFLOAF", "FRESCA TUNA AFRITADA", "CENTURY TUNA", "555 TUNA", "FRESCA TUNA FLAKES AND OIL", "FRESCA TUNA ADOBO", "LUCK ME NOODLES", "LUCKY ME PANCIT CANTON", "LUCKEY ME NOODLES LABUYO", "GREAT TASTE WHITE", "KOPIKO BLANCA TWIN PACK", "KOPIKO BROWN", "KOPIKO BROWN TWIN PACK", "KOPIKO BLACK", "KOPIKO BLACK TWIN PACK", "NESCAFE CREAMY WHITE", "NESCAFE CREAMY LATTE", "NESCAFE ORIGINAL TWIN PACK", "NESCAFE ORIGINAL", "BEARBRAND", "BIRCH TREE", "BIRCH TREE TWIN PACK", "WINGS POWDER", "WINGS BAR", "CHAMPION BAR", "CHAMPION POWDER", "TIDE POWDER", "SURF POWDER", "SURF BAR", "TIDE TWIN PACK POWDER", "ARIEL POWDER", "ARIEL TWINPACK POWDER", "JOY DISWASHING LIQUID", "SURF FABRIC CONDITIONER", "DOWNY", "SUNSILK SHAMPOO", "CREAMSILK SHAMPOO", "CREAMSILK CONDITIONER", "CLOSE UP", "HAPPE TOOTHPASTE", "COLGATE TOOTHPASTE", "NESCAFE STICK", "SILVERSWAN TOYO GAMAY", "SILVERSWAN TOYO DAKO", "SILVERSWAN SUKA DAKO", "SILVERSWAN SUKA GAMAY", "PAPA KETCHUP", "BANANA KETCHUP", "DELMONTE TIDBITS", "CALUMET", "MISUA", "CRISPY FRY", "TASTY FRY", "BROWN SUGAR 1/4", "WHITE SUGAR 1/4", "STAR MARGARINE", "HANSEL", "COMBI", "FUDGEE BAR", "REBISCO CRACKERS", "MAGIC FLAKES", "REBISCO EXTREME", "TIGER", "TOPPS", "BINGO", "FITA", "CALCHEESE", "WAFELLO", "CRACKLINGS", "MUNCHER", "YUMSHOTS", "SUPERCRUNCH DAKO", "NOVA", "CRACKLINGS GAMAY", "OISHI GAMAY", "FISH CRACKER", "MANG JUAN", "POTATOES", "KIREI", "CHEESE RINGS", "EDEN", "STAR MARGARINE TWIN PACK", "CHEEZE WIZ TWIN PACK", "TANG ORANGE", "NESTEA", "TANG PINEAPPLE", "TANG LEMON", "GINISA", "MANG TOMAS", "KNOR SINIGANG MIX", "MAMA SITAS", "REXONA", "SALON PAS", "EARTH SCRUB", "KIWI", "BUG OFF", "SHAVE", "HEAD AND SHOULDERS", "PALMOLIVE SHAMPOO", "WAFER", "JAM JAM", "PRITONG BANGUS", "OK JUICE", "COBRA", "PREMIER", "JUICY COLOGNE", "ETHYL ALCOHOL", "EFFICASCENT EXTREME", "EFFICASCENT EXTRA STRENGTH", "ACEITI DE MANZANILLA", "MAMAS LOVE", "SILVERSWAN TOYO PLASTIC", "SNOW BEAR"];
 function addCatalogNames(){

@@ -121,6 +121,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 </style>
 </head>
 <body class="auth-locked">
+<script>try{if(sessionStorage.getItem("joshuaPosCloudToken_v1")){document.body.classList.remove("auth-locked");document.addEventListener("DOMContentLoaded",()=>{const panel=document.getElementById("ownerAuth");if(panel)panel.style.display="none";},{once:true});}}catch(e){}</script>
 
 <div id="ownerAuth">
  <div class="auth-card">
@@ -456,12 +457,15 @@ function ownerAuthLoading(){
   document.body.classList.add("auth-locked");
 }
 async function ownerAuthBootstrap(){
-  ownerAuthLoading();
+  const token=cloudToken();
+  if(token){
+    $("ownerAuth").style.display="none";
+    document.body.classList.remove("auth-locked");
+  }
   $("ownerAuthSubmit").disabled=true;
   try{
     const status=await cloudRequest("auth_status",{method:"GET"});
     ownerSetupMode=!status.configured;
-    const token=cloudToken();
     if(token){
       try{await openCloudWorkspace();return}
       catch(error){

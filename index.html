@@ -625,18 +625,21 @@ async function startInventoryScanner(){
       Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,
       Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE
     ];
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const cameraConfig=isMobile
+      ?{facingMode:"environment"}
+      :{facingMode:"user"};
     await inventoryQrScanner.start(
-      {facingMode:"environment"},
+      cameraConfig,
       {
         fps:15,
-        qrbox:(w,h)=>({width:Math.min(420,w*0.92),height:Math.min(190,h*0.48)}),
+        qrbox:(w,h)=>({width:Math.min(460,w*0.94),height:Math.min(210,h*0.5)}),
         aspectRatio:1.6,
         formatsToSupport,
         videoConstraints:{
-          facingMode:{ideal:"environment"},
           width:{ideal:1920},
           height:{ideal:1080},
-          advanced:[{focusMode:"continuous"}]
+          ...(isMobile?{facingMode:{ideal:"environment"}}:{facingMode:{ideal:"user"}})
         }
       },
       async(decodedText)=>{
@@ -650,7 +653,7 @@ async function startInventoryScanner(){
       ()=>{}
     );
     inventoryScanActive=true;
-    status.textContent="Camera ready. Hold the phone 10–20 cm away and move slowly until the barcode is sharp.";
+    status.textContent=isMobile?"Camera ready. Hold the phone 10–20 cm away and move slowly until the barcode is sharp.":"Webcam ready. Hold the barcode 10–20 cm from the camera and adjust its position until sharp.";
     const torchButton=$("inventoryTorchButton");
     if(torchButton){
       torchButton.dataset.enabled="false";

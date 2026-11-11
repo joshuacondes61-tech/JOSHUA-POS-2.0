@@ -1,0 +1,553 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087f70">
+<title>JOSHUA POS</title>
+<style>
+:root{--green:#087f70;--green2:#0ba58c;--pale:#e4f6f0;--bg:#f4f7f6;--card:#fff;--text:#172b27;--muted:#71817c;--border:#e2eae7;--red:#dc4545;--yellow:#f4b942;--shadow:0 5px 20px #163b3010}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body.dark{--bg:#101916;--card:#19241f;--text:#edf5f1;--muted:#a1b2aa;--border:#304039;--pale:#243e35;--shadow:0 5px 20px #0003}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--green);color:white;font-weight:650}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);outline:none;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--green2);box-shadow:0 0 0 2px #0ba58c20}
+label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px;font-weight:650}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:24px;margin-bottom:5px}h2{font-size:18px;margin-bottom:14px}h3{font-size:14px;margin-bottom:10px}
+small,.muted{color:var(--muted)}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{height:43px;width:43px;object-fit:cover;border-radius:13px;background:var(--pale);display:grid;place-items:center;font-size:23px;flex-shrink:0}
+.brandname{font-weight:850;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topactions{display:flex;gap:7px}
+.iconbtn{background:var(--pale);color:var(--green);padding:10px;border-radius:11px}
+.app{max-width:1500px;margin:auto;display:flex;min-height:calc(100vh - 70px)}
+.sidebar{width:225px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);padding:18px 12px}
+.navtitle{font-size:10px;letter-spacing:1.4px;color:var(--muted);padding:14px 10px 7px;font-weight:800}
+.navbtn{width:100%;display:flex;align-items:center;gap:11px;text-align:left;color:var(--muted);background:transparent;margin:3px 0;padding:12px;border-radius:11px;font-weight:650}
+.navbtn.active,.navbtn:hover{background:var(--pale);color:var(--green)}
+.navbtn .ico{width:23px;text-align:center;font-size:17px}
+.main{flex:1;min-width:0;padding:24px}
+.page{display:none}.page.active{display:block}
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.pagehead p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.stat{display:flex;justify-content:space-between;gap:8px}
+.stat .num{font-size:25px;font-weight:850;letter-spacing:-.8px;margin:8px 0 3px;overflow-wrap:anywhere}
+.stat .emoji{font-size:21px;background:var(--pale);height:42px;width:42px;border-radius:12px;display:grid;place-items:center}
+.green{color:var(--green)}.red{color:var(--red)}.yellow{color:#b78113}
+.row{display:flex;align-items:center;gap:10px}.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stack{display:grid;gap:12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{min-width:0}.wide{grid-column:1/-1}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.secondary{background:var(--pale);color:var(--green)}.danger{background:#ffeded;color:#bd3030}.neutral{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.sm{padding:7px 10px;font-size:12px}.full{width:100%}
+.tablewrap{overflow-x:auto;width:100%}
+table{width:100%;border-collapse:collapse;white-space:nowrap}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--border)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+td{font-size:13px}tr:last-child td{border-bottom:0}
+.productpic{width:44px;height:44px;object-fit:cover;border-radius:10px;background:var(--pale)}
+.pname{font-weight:750}.badge{display:inline-block;padding:5px 8px;border-radius:7px;background:var(--pale);color:var(--green);font-size:11px;font-weight:750}
+.badge.redbg{background:#ffe9e9;color:#c33333}.badge.yellowbg{background:#fff2d3;color:#966300}
+.poslayout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:16px;align-items:start}
+.productgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:12px}
+.productcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:.15s}
+.productcard:hover{border-color:var(--green2);transform:translateY(-2px)}
+.productcard img{width:100%;height:115px;object-fit:cover;background:var(--pale)}
+.productinfo{padding:10px}.productinfo strong{display:block;min-height:35px;line-height:1.3}
+.productinfo .price{color:var(--green);font-weight:850;font-size:16px;margin-top:5px}
+.cartline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px 0;border-bottom:1px solid var(--border)}
+.qty{display:flex;align-items:center;gap:7px}
+.qty button{padding:4px 9px;background:var(--pale);color:var(--green)}
+.totalrow{display:flex;justify-content:space-between;padding:7px 0;gap:10px}
+.totalbig{font-size:24px;font-weight:850;color:var(--green)}
+.empty{text-align:center;padding:32px 10px;color:var(--muted)}
+.bar{height:8px;background:var(--border);border-radius:20px;overflow:hidden;margin-top:7px}
+.bar span{display:block;height:100%;background:var(--green2);border-radius:20px}
+.receipt{max-width:360px;margin:15px auto;padding:18px;background:white;color:#111;font-family:monospace}
+.receipt h2,.receipt p{text-align:center}
+.receipt hr{border:0;border-top:1px dashed #888}
+.receiptline{display:flex;justify-content:space-between;gap:10px;margin:7px 0}
+.bottomnav{display:none}
+.preview{width:60px;height:60px;border-radius:12px;object-fit:cover;background:var(--pale)}
+.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#173d32;color:white;padding:13px 20px;border-radius:12px;box-shadow:var(--shadow);z-index:100;max-width:90%;text-align:center}
+.chart{height:175px;display:flex;align-items:end;gap:8px;padding-top:15px}
+.chartcol{flex:1;min-width:0;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:5px}
+.chartbar{width:min(36px,80%);min-height:3px;background:linear-gradient(#16b99a,#087f70);border-radius:6px 6px 2px 2px}
+.chartlabel{font-size:10px;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.poslayout{grid-template-columns:minmax(0,1fr) 310px}.sidebar{width:190px}.main{padding:17px}}
+@media(max-width:680px){
+ .topbar{padding:10px 13px}.brandname{font-size:14px}.logo{width:38px;height:38px}
+ .app{display:block;padding-bottom:78px}.sidebar{display:none}.main{padding:14px}
+ .grid{gap:9px}.card{padding:14px;border-radius:14px}.stat .num{font-size:20px}.stat .emoji{width:34px;height:34px;font-size:17px}
+ .poslayout{grid-template-columns:1fr}.cartcard{position:static}.productgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.productcard img{height:115px}
+ .bottomnav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);border-top:1px solid var(--border);padding:7px 3px calc(7px + env(safe-area-inset-bottom));justify-content:space-around}
+ .bottomnav button{background:transparent;color:var(--muted);padding:6px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;min-width:0;flex:1}
+ .bottomnav button.active{color:var(--green)}.bottomnav span{font-size:19px}
+ .grid2{grid-template-columns:1fr}.pagehead{margin-bottom:15px}.pagehead h1{font-size:22px}
+ .formgrid{grid-template-columns:1fr}.wide{grid-column:auto}
+ .topactions .iconbtn{padding:8px}.hide-mobile{display:none}
+}
+@media print{
+ body{background:white!important;color:#111!important}
+ body *{visibility:hidden!important}
+ #printarea,#printarea *{visibility:visible!important}
+ #printarea{position:absolute;left:0;top:0;width:100%;background:white!important;color:#111!important}
+ .receipt{max-width:100%;margin:0 auto}
+}
+
+/* Owner sign-in */
+body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.auth-locked>#toast,body.auth-locked>#printarea{display:none!important}
+#ownerAuth{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#e7f6f1,#f4f7f6 55%,#dcefe9)}
+#ownerAuth .auth-card{width:min(100%,420px);background:#fff;border:1px solid #dce9e3;border-radius:22px;padding:28px;box-shadow:0 18px 55px #123d3020;color:#172b27}
+#ownerAuth .auth-mark{width:54px;height:54px;border-radius:16px;background:#e4f6f0;display:grid;place-items:center;font-size:27px;margin-bottom:18px}
+#ownerAuth h1{font-size:24px;margin:0 0 7px;color:#172b27}
+#ownerAuth .auth-sub{color:#71817c;margin:0 0 22px;line-height:1.5}
+#ownerAuth .auth-field{margin:13px 0}
+#ownerAuth label{display:block;color:#52645d;font-size:12px;font-weight:700;margin-bottom:6px}
+#ownerAuth input{width:100%;padding:13px;border:1px solid #dce9e3;border-radius:11px;font:inherit;color:#172b27;background:#fff}
+#ownerAuth button{width:100%;padding:13px;border-radius:11px;background:#087f70;color:#fff;font-weight:750;margin-top:8px}
+#ownerAuth .auth-error{color:#bd3030;font-size:12px;min-height:18px;margin:9px 0 0}
+#ownerAuth .auth-note{font-size:11px;color:#71817c;line-height:1.5;margin:16px 0 0}
+@media(max-width:480px){#ownerAuth .auth-card{padding:23px 19px}}
+
+</style>
+</head>
+<body class="auth-locked">
+
+<div id="ownerAuth">
+ <div class="auth-card">
+  <div class="auth-mark">🛒</div>
+  <h1 id="authHeading">Owner sign in</h1>
+  <p class="auth-sub" id="authSub">Sign in to open your JOSHUA POS store workspace.</p>
+  <form id="ownerAuthForm" onsubmit="submitOwnerAuth(event)">
+   <div class="auth-field"><label for="ownerUsername">OWNER USERNAME</label><input id="ownerUsername" autocomplete="username" required minlength="3" maxlength="40" placeholder="Enter your username"></div>
+   <div class="auth-field"><label for="ownerPassword">PASSWORD</label><input id="ownerPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Enter your password"></div>
+   <div class="auth-field" id="confirmPasswordField" style="display:none"><label for="ownerPasswordConfirm">CONFIRM PASSWORD</label><input id="ownerPasswordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your password"></div>
+   <button id="ownerAuthSubmit" type="submit">Sign in</button>
+   <p class="auth-error" id="ownerAuthError" role="alert"></p>
+  </form>
+  <p class="auth-note">This owner login is saved in this browser only. Store records remain in this browser's local storage and do not automatically sync to other devices.</p>
+ </div>
+</div>
+
+<header class="topbar">
+ <div class="brand">
+  <img id="toplogo" class="logo" alt="Store logo" style="display:none">
+  <div id="logofallback" class="logo">🛒</div>
+  <div style="min-width:0"><div class="brandname" id="storetitle">EMERALD STORE</div><small id="storetag">Sari-Sari POS & Inventory</small></div>
+ </div>
+ <div class="topactions">
+   <button class="iconbtn" onclick="ownerSignOut()" title="Sign out">↪</button>
+
+  <button class="iconbtn" onclick="toggleDark()" title="Dark mode">🌙</button>
+  <button class="iconbtn" onclick="navigate('settings')" title="Settings">⚙️</button>
+ </div>
+</header>
+
+<div class="app">
+<aside class="sidebar">
+ <div class="navtitle">WORKSPACE</div>
+ <button class="navbtn active" data-page="dashboard" onclick="navigate('dashboard')"><span class="ico">▦</span>Dashboard</button>
+ <button class="navbtn" data-page="pos" onclick="navigate('pos')"><span class="ico">🛒</span>Cashier POS</button>
+ <button class="navbtn" data-page="inventory" onclick="navigate('inventory')"><span class="ico">📦</span>Inventory</button>
+ <button class="navbtn" data-page="sales" onclick="navigate('sales')"><span class="ico">🧾</span>Sales history</button>
+ <div class="navtitle">MANAGEMENT</div>
+ <button class="navbtn" data-page="purchases" onclick="navigate('purchases')"><span class="ico">🚚</span>Purchases</button>
+ <button class="navbtn" data-page="suppliers" onclick="navigate('suppliers')"><span class="ico">🏭</span>Suppliers</button>
+ <button class="navbtn" data-page="utang" onclick="navigate('utang')"><span class="ico">📒</span>Utang ledger</button>
+ <button class="navbtn" data-page="expenses" onclick="navigate('expenses')"><span class="ico">💸</span>Expenses</button>
+ <button class="navbtn" data-page="reports" onclick="navigate('reports')"><span class="ico">📈</span>Reports</button>
+ <div class="navtitle">STORE</div>
+ <button class="navbtn" data-page="settings" onclick="navigate('settings')"><span class="ico">⚙️</span>Settings & backup</button>
+</aside>
+
+<main class="main">
+<section class="page active" id="page-dashboard">
+ <div class="pagehead"><div><h1>Good day! 👋</h1><p>Your store at a glance.</p></div><span class="badge" id="todaybadge"></span></div>
+ <div class="grid">
+  <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
+  <div class="card stat"><div><small>Products</small><div class="num" id="dashproducts">0</div><small>Items in catalog</small></div><div class="emoji">📦</div></div>
+  <div class="card stat"><div><small>Inventory cost</small><div class="num" id="dashstock">₱0</div><small>Estimated stock value</small></div><div class="emoji">🏪</div></div>
+  <div class="card stat"><div><small>Low stock</small><div class="num" id="dashlow">0</div><small>Needs attention</small></div><div class="emoji">⚠️</div></div>
+ </div>
+ <div class="grid2">
+  <div class="card"><div class="between"><h2>Sales overview</h2><button class="secondary sm" onclick="navigate('reports')">Full report ↗</button></div><div id="dashchart" class="chart"></div><div class="between"><small>Sales over the last 7 days</small><strong id="weektotal">₱0</strong></div></div>
+  <div class="card"><h2>Quick actions</h2><div class="grid2">
+   <button onclick="navigate('pos')">🛒 New sale</button><button class="secondary" onclick="navigate('inventory')">＋ Product</button>
+   <button class="secondary" onclick="navigate('purchases')">📥 Stock purchase</button><button class="secondary" onclick="navigate('utang')">📒 Record utang</button>
+  </div><hr><h3>Store alerts</h3><div id="dashalerts" class="stack"></div></div>
+ </div>
+ <div class="card" style="margin-top:16px"><h2>Recent sales</h2><div id="dashrecent"></div></div>
+</section>
+
+<section class="page" id="page-pos">
+ <div class="pagehead"><div><h1>Cashier POS</h1><p>Tap a product to add it to the cart.</p></div><span class="badge">₱ Philippine peso</span></div>
+ <div class="poslayout">
+  <div class="stack">
+   <div class="row"><input id="possearch" placeholder="🔎 Search product or scan barcode..." oninput="renderPOS()" onkeydown="if(event.key==='Enter')scanBarcode()"><select id="poscat" style="max-width:145px" onchange="renderPOS()"><option value="">All categories</option></select></div>
+   <div id="posproducts" class="productgrid"></div>
+  </div>
+  <div class="card cartcard">
+   <div class="between"><h2>🛍️ Current order</h2><button class="danger sm" onclick="clearCart()">Clear</button></div>
+   <div id="cartitems"><div class="empty">Your cart is empty.</div></div>
+   <hr>
+   <div class="field"><label>Customer name (optional)</label><input id="saleCustomer" placeholder="Walk-in customer"></div>
+   <div class="field" style="margin-top:10px"><label>Payment method</label><select id="payment"><option>Cash</option><option>GCash</option><option>Maya</option><option>Bank transfer</option><option>Utang / Credit</option></select></div>
+   <div class="field" style="margin-top:10px"><label>Discount (₱)</label><input id="discount" type="number" min="0" value="0" oninput="renderCart()"></div>
+   <div class="totalrow"><span>Subtotal</span><strong id="subtotal">₱0.00</strong></div>
+   <div class="totalrow"><span>Discount</span><strong id="discountdisplay">₱0.00</strong></div>
+   <div class="totalrow"><strong>Total</strong><span class="totalbig" id="carttotal">₱0.00</span></div>
+   <div class="field" style="margin-top:8px"><label>Cash received / amount paid (₱)</label><input id="cash" type="number" min="0" step=".01" placeholder="0.00" oninput="renderCart()"></div>
+   <div class="totalrow"><span>Change</span><strong class="green" id="change">₱0.00</strong></div>
+   <button class="full" style="margin-top:10px;padding:14px" onclick="checkout()">✓ Complete sale</button>
+  </div>
+ </div>
+</section>
+
+<section class="page" id="page-inventory">
+ <div class="pagehead"><div><h1>Inventory</h1><p>Manage products, prices, stock, and expiry dates.</p></div><button onclick="resetProductForm();document.getElementById('productformcard').scrollIntoView({behavior:'smooth'})">＋ Add product</button></div>
+ <div class="card" id="productformcard" style="margin-bottom:16px">
+  <h2 id="productformtitle">Add new product</h2>
+  <form id="productform" onsubmit="saveProduct(event)">
+   <input type="hidden" id="editid">
+   <div class="formgrid">
+    <div class="field"><label>Product name *</label><input id="pname" required placeholder="e.g. Sardines 155g"></div>
+    <div class="field"><label>Category</label><input id="pcat" list="categories" placeholder="Canned goods"><datalist id="categories"><option>Snacks</option><option>Beverages</option><option>Canned goods</option><option>Rice</option><option>Household</option><option>Personal care</option><option>Load</option><option>Others</option></datalist></div>
+    <div class="field"><label>Cost price (₱) *</label><input id="pcost" type="number" min="0" step=".01" required placeholder="0.00"></div>
+    <div class="field"><label>Selling price (₱) *</label><input id="pprice" type="number" min="0" step=".01" required placeholder="0.00"></div>
+    <div class="field"><label>Opening / current stock *</label><input id="pstock" type="number" min="0" step="1" required placeholder="0"></div>
+    <div class="field"><label>Low-stock alert quantity</label><input id="pmin" type="number" min="0" value="5"></div>
+    <div class="field"><label>Barcode / SKU</label><input id="pbarcode" placeholder="Scan or enter code"></div>
+    <div class="field"><label>Expiry date (optional)</label><input id="pexpiry" type="date"></div>
+    <div class="field"><label>Product image</label>
+<input id="pimage" type="file" accept="image/*" onchange="previewImage(event)"></div>
+    <div class="field row"><img id="imagepreview" class="preview" alt="Preview" style="display:none"><small>Upload from your phone or camera.</small></div>
+   </div>
+   <div class="btnrow" style="margin-top:14px"><button type="submit">Save product</button><button type="button" class="neutral" onclick="resetProductForm()">Reset form</button></div>
+  </form>
+ </div>
+ <div class="card"><div class="between" style="margin-bottom:14px"><h2>Product catalog</h2><span class="badge" id="inventorycount">0 products</span></div>
+  <div class="row" style="margin-bottom:14px"><input id="invsearch" placeholder="Search name, SKU, barcode..." oninput="renderInventory()"><select id="invcat" style="max-width:160px" onchange="renderInventory()"><option value="">All categories</option></select></div>
+  <div id="inventorytable"></div>
+ </div>
+</section>
+
+<section class="page" id="page-sales">
+ <div class="pagehead"><div><h1>Sales history</h1><p>View completed transactions and reprint receipts.</p></div></div>
+ <div class="card"><div class="row" style="margin-bottom:14px"><input type="date" id="salesfrom" onchange="renderSales()"><input type="date" id="salesto" onchange="renderSales()"><button class="secondary" onclick="document.getElementById('salesfrom').value='';document.getElementById('salesto').value='';renderSales()">Clear</button></div><div id="salestable"></div></div>
+</section>
+
+<section class="page" id="page-purchases">
+ <div class="pagehead"><div><h1>Purchases & restocking</h1><p>Record stock bought from suppliers.</p></div></div>
+ <div class="card" style="margin-bottom:16px"><h2>Record purchase</h2>
+  <form onsubmit="savePurchase(event)" class="formgrid">
+   <div class="field"><label>Product *</label><select id="buyproduct" required></select></div>
+   <div class="field"><label>Supplier</label><select id="buysupplier"><option value="">Unspecified</option></select></div>
+   <div class="field"><label>Quantity purchased *</label><input id="buyqty" type="number" min="1" step="1" required></div>
+   <div class="field"><label>Cost per unit (₱) *</label><input id="buycost" type="number" min="0" step=".01" required></div>
+   <div class="field"><label>Date</label><input id="buydate" type="date" required></div>
+   <div class="field"><label>Reference / notes</label><input id="buynotes" placeholder="Invoice or notes"></div>
+   <div class="wide"><button type="submit">＋ Save purchase & update stock</button></div>
+  </form>
+ </div>
+ <div class="card"><h2>Purchase history</h2><div id="purchasetable"></div></div>
+</section>
+
+<section class="page" id="page-suppliers">
+ <div class="pagehead"><div><h1>Suppliers</h1><p>Keep supplier contact details in one place.</p></div></div>
+ <div class="card" style="margin-bottom:16px"><h2>Add supplier</h2><form onsubmit="saveSupplier(event)" class="formgrid">
+  <div class="field"><label>Supplier / business name *</label><input id="supname" required></div>
+  <div class="field"><label>Contact person</label><input id="supcontact"></div>
+  <div class="field"><label>Phone number</label><input id="supphone" type="tel"></div>
+  <div class="field"><label>Address</label><input id="supaddress"></div>
+  <div class="wide"><button type="submit">Save supplier</button></div>
+ </form></div>
+ <div class="card"><h2>Supplier directory</h2><div id="suppliertable"></div></div>
+</section>
+
+<section class="page" id="page-utang">
+ <div class="pagehead"><div><h1>Utang ledger</h1><p>Track customer credit and payments.</p></div></div>
+ <div class="grid">
+  <div class="card stat"><div><small>Total outstanding</small><div class="num" id="utangtotal">₱0</div></div><div class="emoji">📒</div></div>
+  <div class="card stat"><div><small>Customers with balance</small><div class="num" id="utangcustomers">0</div></div><div class="emoji">👥</div></div>
+ </div>
+ <div class="card" style="margin-bottom:16px"><h2>Record utang</h2><form onsubmit="saveUtang(event)" class="formgrid">
+  <div class="field"><label>Customer name *</label><input id="utangname" required></div>
+  <div class="field"><label>Amount owed (₱) *</label><input id="utangamount" type="number" min=".01" step=".01" required></div>
+  <div class="field"><label>Date</label><input id="utangdate" type="date" required></div>
+  <div class="field"><label>Notes</label><input id="utangnotes" placeholder="What was borrowed?"></div>
+  <div class="wide"><button type="submit">＋ Record utang</button></div>
+ </form></div>
+ <div class="card"><h2>Customer balances</h2><div id="utangtable"></div></div>
+</section>
+
+<section class="page" id="page-expenses">
+ <div class="pagehead"><div><h1>Expenses</h1><p>Track operating costs and other spending.</p></div></div>
+ <div class="card" style="margin-bottom:16px"><h2>Add expense</h2><form onsubmit="saveExpense(event)" class="formgrid">
+  <div class="field"><label>Description *</label><input id="expname" required placeholder="Electricity, transport..."></div>
+  <div class="field"><label>Amount (₱) *</label><input id="expamount" type="number" min=".01" step=".01" required></div>
+  <div class="field"><label>Category</label><select id="expcat"><option>Utilities</option><option>Transportation</option><option>Rent</option><option>Supplies</option><option>Salary</option><option>Repairs</option><option>Other</option></select></div>
+  <div class="field"><label>Date</label><input id="expdate" type="date" required></div>
+  <div class="wide"><button type="submit">＋ Save expense</button></div>
+ </form></div>
+ <div class="card"><h2>Expense history</h2><div id="expensetable"></div></div>
+</section>
+
+<section class="page" id="page-reports">
+ <div class="pagehead"><div><h1>Business reports</h1><p>Sales, cost, expenses, and estimated profit.</p></div><button class="secondary" onclick="exportCSV()">Export sales CSV</button></div>
+ <div class="card" style="margin-bottom:16px"><div class="formgrid">
+  <div class="field"><label>From date</label><input type="date" id="reportfrom" onchange="renderReports()"></div>
+  <div class="field"><label>To date</label><input type="date" id="reportto" onchange="renderReports()"></div>
+ </div><div class="btnrow" style="margin-top:10px"><button class="secondary sm" onclick="setReportRange(0)">Today</button><button class="secondary sm" onclick="setReportRange(7)">Last 7 days</button><button class="secondary sm" onclick="setReportRange(30)">Last 30 days</button><button class="secondary sm" onclick="setReportRange(365)">This year</button></div></div>
+ <div class="grid">
+  <div class="card stat"><div><small>Revenue</small><div class="num" id="rRevenue">₱0</div></div><div class="emoji">💰</div></div>
+  <div class="card stat"><div><small>Cost of goods sold</small><div class="num" id="rCost">₱0</div></div><div class="emoji">📦</div></div>
+  <div class="card stat"><div><small>Gross profit</small><div class="num" id="rGross">₱0</div></div><div class="emoji">📈</div></div>
+  <div class="card stat"><div><small>Expenses</small><div class="num" id="rExpenses">₱0</div></div><div class="emoji">💸</div></div>
+ </div>
+ <div class="card" style="margin-bottom:16px"><div class="between"><h2>Estimated net profit</h2><span class="badge">Selected period</span></div><div id="rNet" class="totalbig">₱0.00</div><p class="muted" style="margin-top:8px">Net profit = sales revenue − recorded cost of goods sold − recorded expenses. Utang is included as a sale when recorded.</p></div>
+ <div class="grid2"><div class="card"><h2>Best-selling products</h2><div id="bestproducts"></div></div><div class="card"><h2>Sales by payment method</h2><div id="paymentreport"></div></div></div>
+</section>
+
+<section class="page" id="page-settings">
+ <div class="pagehead"><div><h1>Store settings</h1><p>Personalize your store and protect your data.</p></div></div>
+ <div class="grid2">
+  <div class="card"><h2>🏪 Store identity</h2><form onsubmit="saveSettings(event)" class="stack">
+   <div class="field"><label>Store name</label><input id="settingname" required></div>
+   <div class="field"><label>Store address</label><input id="settingaddress"></div>
+   <div class="field"><label>Contact number</label><input id="settingphone"></div>
+   <div class="field"><label>Receipt footer</label><input id="settingfooter" placeholder="Thank you for shopping!"></div>
+   <div class="field"><label>Store logo (optional)</label>
+<input id="settinglogo" type="file" accept="image/*"></div>
+   <button type="submit">Save store settings</button>
+  </form></div>
+  <div class="card"><h2>💾 Data backup</h2><p class="muted">Export your products, sales, suppliers, purchases, expenses, and utang records to a JSON backup file. Store it somewhere safe.</p>
+   <div class="stack"><button onclick="backupData()">⬇ Download full backup</button><div class="field"><label>Restore a JSON backup</label><input id="restorefile" type="file" accept=".json,application/json"></div><button class="secondary" onclick="restoreData()">Restore backup</button><button class="danger" onclick="clearAllData()">Delete all store data</button></div>
+   <hr><h3>Display</h3><button class="secondary full" onclick="toggleDark()">🌙 Toggle dark mode</button>
+  </div>
+ </div>
+ <div class="card" style="margin-top:16px"><h2>About this POS</h2><p class="muted">The JOSHUA POS and Inventory Management System is a mobile-friendly application designed to simplify daily store operations. It helps manage product inventory, process sales, calculate change, print receipts, and monitor sales reports.</p><p class="muted">Developed and Managed by: Joshua Condes.</p></div>
+</section>
+</main>
+</div>
+
+<nav class="bottomnav">
+ <button data-page="dashboard" class="active" onclick="navigate('dashboard')"><span>▦</span>Home</button>
+ <button data-page="pos" onclick="navigate('pos')"><span>🛒</span>Cashier</button>
+ <button data-page="inventory" onclick="navigate('inventory')"><span>📦</span>Stock</button>
+ <button data-page="sales" onclick="navigate('sales')"><span>🧾</span>Sales</button>
+ <button data-page="settings" onclick="navigate('settings')"><span>⚙️</span>More</button>
+</nav>
+<div id="toast" class="toast" style="display:none"></div>
+<div id="printarea" style="display:none"></div>
+
+<script>
+"use strict";
+const KEY="emeraldSariSari_v1";
+const $=id=>document.getElementById(id);
+
+const OWNER_AUTH_KEY="joshuaPosOwnerAuth_v1";
+const OWNER_SESSION_KEY="joshuaPosOwnerSession_v1";
+let ownerSetupMode=false;
+function ownerAuthMessage(message){$("ownerAuthError").textContent=message}
+function ownerAuthScreen(){
+  ownerSetupMode=!localStorage.getItem(OWNER_AUTH_KEY);
+  $("authHeading").textContent=ownerSetupMode?"Create owner account":"Owner sign in";
+  $("authSub").textContent=ownerSetupMode?"Set up the one owner account for this store.":"Sign in to open your JOSHUA POS store workspace.";
+  $("ownerAuthSubmit").textContent=ownerSetupMode?"Create owner account":"Sign in";
+  $("confirmPasswordField").style.display=ownerSetupMode?"block":"none";
+  $("ownerPassword").autocomplete=ownerSetupMode?"new-password":"current-password";
+  $("ownerPasswordConfirm").required=ownerSetupMode;
+}
+async function ownerPasswordHash(password,salt){
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:210000,hash:"SHA-256"},key,256);
+  return Array.from(new Uint8Array(bits),b=>b.toString(16).padStart(2,"0")).join("");
+}
+function bytesFromHex(hex){return new Uint8Array(hex.match(/.{1,2}/g).map(x=>parseInt(x,16)))}
+function ownerAuthUnlock(){
+  sessionStorage.setItem(OWNER_SESSION_KEY,"active");
+  document.body.classList.remove("auth-locked");
+  $("ownerAuth").style.display="none";
+}
+async function submitOwnerAuth(event){
+  event.preventDefault();ownerAuthMessage("");
+  const username=$("ownerUsername").value.trim().toLowerCase();
+  const password=$("ownerPassword").value;
+  if(username.length<3)return ownerAuthMessage("Username must be at least 3 characters.");
+  if(password.length<8)return ownerAuthMessage("Password must be at least 8 characters.");
+  try{
+    if(ownerSetupMode){
+      if(password!==$("ownerPasswordConfirm").value)return ownerAuthMessage("Passwords do not match.");
+      if(localStorage.getItem(OWNER_AUTH_KEY))return ownerAuthScreen();
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      const saltHex=Array.from(salt,b=>b.toString(16).padStart(2,"0")).join("");
+      const hash=await ownerPasswordHash(password,salt);
+      localStorage.setItem(OWNER_AUTH_KEY,JSON.stringify({username,salt:saltHex,hash,createdAt:new Date().toISOString()}));
+      ownerAuthUnlock();toast("Owner account created. Welcome!");
+    }else{
+      const account=JSON.parse(localStorage.getItem(OWNER_AUTH_KEY)||"null");
+      if(!account||username!==account.username)return ownerAuthMessage("Incorrect username or password.");
+      const hash=await ownerPasswordHash(password,bytesFromHex(account.salt));
+      if(hash!==account.hash)return ownerAuthMessage("Incorrect username or password.");
+      ownerAuthUnlock();toast("Signed in successfully.");
+    }
+  }catch(error){ownerAuthMessage("Sign-in setup is unavailable in this browser. Please use the secure HTTPS website.");}
+}
+function ownerSignOut(){
+  sessionStorage.removeItem(OWNER_SESSION_KEY);
+  $("ownerPassword").value="";
+  $("ownerPasswordConfirm").value="";
+  $("ownerAuth").style.display="grid";
+  document.body.classList.add("auth-locked");
+  ownerAuthScreen();
+}
+function ownerAuthBootstrap(){
+  ownerAuthScreen();
+  if(sessionStorage.getItem(OWNER_SESSION_KEY)==="active"){
+    $("ownerAuth").style.display="none";
+    document.body.classList.remove("auth-locked");
+  }
+}
+
+const money=n=>"₱"+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const localDate=s=>s?new Date(s.length===10?s+"T12:00:00":s).toLocaleDateString("en-PH"):"—";
+const initial=()=>({products:[],sales:[],suppliers:[],purchases:[],expenses:[],utang:[],settings:{name:"EMERALD STORE",address:"",phone:"",footer:"Thank you for shopping!"},dark:false});
+let db=loadDB(),cart=[],productImageData="",logoData="",lastReceipt=null,toastTimer;
+function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){return initial()}}
+function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}}
+// Adds the supplied product names to the catalog once, without replacing existing records.
+const catalogProductNames = ["COCA COLA 1L", "MILO", "MEGA SARDINES", "MAGIC SARAP", "KOPIKO BLANCA", "PEPSI GAMAY", "COKE GAMAY", "ENERGEN", "KERATIN SHAMPOO", "KERATIN CONDITIONER", "STING", "YAKULT", "MIK MIK", "MOUNTAIN DEW BOTTLE", "ROYAL PLASTIC", "MOUNTAIN DEW PLASTIC", "ROYAL 1 LTR", "ROYAL BOTTLE", "TANDUAY LIGHT SR.", "TANDUAY LIGHT JR.", "TANDUAY LIGHT LONG NECK", "TANDUAY DARK", "GENEBRA ROUND", "GENEBRA", "EMPERADOR LIGHT JR.", "EMPERADOR LIGHT SR.", "YOUNGSTOWN SARDINES", "LUCK7 SARDINES", "FAMILY SARDINES", "ARGENTINA CORNED BEEF", "LUCK 7 CORNED BEEF", "MEATY CORNED BEEF", "ARGENTINA BEEF LOAF", "FIESTA BEEFLOAF", "HOLIDAY BEEFLOAF", "FRESCA TUNA AFRITADA", "CENTURY TUNA", "555 TUNA", "FRESCA TUNA FLAKES AND OIL", "FRESCA TUNA ADOBO", "LUCK ME NOODLES", "LUCKY ME PANCIT CANTON", "LUCKEY ME NOODLES LABUYO", "GREAT TASTE WHITE", "KOPIKO BLANCA TWIN PACK", "KOPIKO BROWN", "KOPIKO BROWN TWIN PACK", "KOPIKO BLACK", "KOPIKO BLACK TWIN PACK", "NESCAFE CREAMY WHITE", "NESCAFE CREAMY LATTE", "NESCAFE ORIGINAL TWIN PACK", "NESCAFE ORIGINAL", "BEARBRAND", "BIRCH TREE", "BIRCH TREE TWIN PACK", "WINGS POWDER", "WINGS BAR", "CHAMPION BAR", "CHAMPION POWDER", "TIDE POWDER", "SURF POWDER", "SURF BAR", "TIDE TWIN PACK POWDER", "ARIEL POWDER", "ARIEL TWINPACK POWDER", "JOY DISWASHING LIQUID", "SURF FABRIC CONDITIONER", "DOWNY", "SUNSILK SHAMPOO", "CREAMSILK SHAMPOO", "CREAMSILK CONDITIONER", "CLOSE UP", "HAPPE TOOTHPASTE", "COLGATE TOOTHPASTE", "NESCAFE STICK", "SILVERSWAN TOYO GAMAY", "SILVERSWAN TOYO DAKO", "SILVERSWAN SUKA DAKO", "SILVERSWAN SUKA GAMAY", "PAPA KETCHUP", "BANANA KETCHUP", "DELMONTE TIDBITS", "CALUMET", "MISUA", "CRISPY FRY", "TASTY FRY", "BROWN SUGAR 1/4", "WHITE SUGAR 1/4", "STAR MARGARINE", "HANSEL", "COMBI", "FUDGEE BAR", "REBISCO CRACKERS", "MAGIC FLAKES", "REBISCO EXTREME", "TIGER", "TOPPS", "BINGO", "FITA", "CALCHEESE", "WAFELLO", "CRACKLINGS", "MUNCHER", "YUMSHOTS", "SUPERCRUNCH DAKO", "NOVA", "CRACKLINGS GAMAY", "OISHI GAMAY", "FISH CRACKER", "MANG JUAN", "POTATOES", "KIREI", "CHEESE RINGS", "EDEN", "STAR MARGARINE TWIN PACK", "CHEEZE WIZ TWIN PACK", "TANG ORANGE", "NESTEA", "TANG PINEAPPLE", "TANG LEMON", "GINISA", "MANG TOMAS", "KNOR SINIGANG MIX", "MAMA SITAS", "REXONA", "SALON PAS", "EARTH SCRUB", "KIWI", "BUG OFF", "SHAVE", "HEAD AND SHOULDERS", "PALMOLIVE SHAMPOO", "WAFER", "JAM JAM", "PRITONG BANGUS", "OK JUICE", "COBRA", "PREMIER", "JUICY COLOGNE", "ETHYL ALCOHOL", "EFFICASCENT EXTREME", "EFFICASCENT EXTRA STRENGTH", "ACEITI DE MANZANILLA", "MAMAS LOVE", "SILVERSWAN TOYO PLASTIC", "SNOW BEAR"];
+function addCatalogNames(){
+  let changed=false;
+  const existing=new Set(db.products.map(p=>String(p.name||"").trim().toLowerCase()));
+  catalogProductNames.forEach(name=>{
+    const key=name.trim().toLowerCase();
+    if(!existing.has(key)){
+      db.products.push({id:uid(),name,category:"Others",cost:0,price:0,stock:0,min:0,barcode:"",expiry:"",image:""});
+      existing.add(key); changed=true;
+    }
+  });
+  if(changed) saveDB();
+}
+addCatalogNames();
+
+function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").style.display="none",2600)}
+function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===p));window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
+function toggleDark(){db.dark=!db.dark;document.body.classList.toggle("dark",db.dark);saveDB();toast(db.dark?"Dark mode enabled":"Light mode enabled")}
+function storeHeader(){let s=db.settings;$("storetitle").textContent=s.name||"EMERALD STORE";$("storetag").textContent=s.address||"Sari-Sari POS & Inventory";if(s.logo){$("toplogo").src=s.logo;$("toplogo").style.display="block";$("logofallback").style.display="none"}else{$("toplogo").style.display="none";$("logofallback").style.display="grid"}}
+function refresh(){storeHeader();renderDashboard();renderPOS();renderCart();renderInventory();renderSales();renderPurchases();renderSuppliers();renderUtang();renderExpenses();renderReports();renderSettings();fillSelects()}
+function fillSelects(){let cats=[...new Set(db.products.map(p=>p.category||"Others"))].sort();["poscat","invcat"].forEach(id=>{let el=$(id),old=el.value;el.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");el.value=old});$("buyproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} (Stock: ${p.stock})</option>`).join("")||'<option value="">Add products first</option>';$("buysupplier").innerHTML='<option value="">Unspecified</option>'+db.suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}
+function renderDashboard(){
+let sales=db.sales.filter(s=>s.date===today()),revenue=sales.reduce((a,s)=>a+s.total,0);
+$("todaybadge").textContent=new Date().toLocaleDateString("en-PH",{weekday:"short",month:"short",day:"numeric"});
+$("dashsales").textContent=money(revenue);$("dashtransactions").textContent=sales.length+" transactions";$("dashproducts").textContent=db.products.length;
+$("dashstock").textContent=money(db.products.reduce((a,p)=>a+p.cost*p.stock,0));let low=db.products.filter(p=>p.stock<=p.min);
+$("dashlow").textContent=low.length;
+let days=Array.from({length:7},(_,i)=>{let d=new Date();d.setDate(d.getDate()-(6-i));let date=d.toISOString().slice(0,10);return {date,label:d.toLocaleDateString("en",{weekday:"short"}),amount:db.sales.filter(s=>s.date===date).reduce((a,s)=>a+s.total,0)}});
+let max=Math.max(1,...days.map(x=>x.amount));$("dashchart").innerHTML=days.map(x=>`<div class="chartcol" title="${esc(x.date)}: ${money(x.amount)}"><small style="font-size:10px">${x.amount?Math.round(x.amount):""}</small><div class="chartbar" style="height:${Math.max(3,x.amount/max*72)}%"></div><span class="chartlabel">${x.label}</span></div>`).join("");
+$("weektotal").textContent=money(days.reduce((a,x)=>a+x.amount,0));
+let alerts=[...low.map(p=>`<div class="between"><span>⚠️ ${esc(p.name)}</span><span class="badge yellowbg">${p.stock} left</span></div>`),...db.products.filter(p=>p.expiry&&p.expiry<=new Date(Date.now()+30*86400000).toISOString().slice(0,10)).map(p=>`<div class="between"><span>📅 ${esc(p.name)}</span><span class="badge redbg">Expires ${localDate(p.expiry)}</span></div>`)];
+$("dashalerts").innerHTML=alerts.join("")||'<div class="empty">✨ Everything looks good!</div>';
+$("dashrecent").innerHTML=sales.length?table(["Time","Receipt","Customer","Payment","Total"],sales.slice().reverse().slice(0,6).map(s=>[esc(s.time||""),esc(s.id),esc(s.customer||"Walk-in"),esc(s.payment),money(s.total)])):'<div class="empty">No sales recorded today.</div>';
+}
+function renderPOS(){
+let q=($("possearch").value||"").toLowerCase(),cat=$("poscat").value;
+let list=db.products.filter(p=>(p.name+" "+p.barcode+" "+p.category).toLowerCase().includes(q)&&(!cat||p.category===cat));
+$("posproducts").innerHTML=list.map(p=>`<div class="productcard" onclick="addCart('${p.id}')" title="Tap to add"><img src="${p.image||""}" onerror="this.style.visibility='hidden'" alt=""><div class="productinfo"><strong>${esc(p.name)}</strong><small>${p.stock} in stock</small><div class="price">${money(p.price)}</div></div></div>`).join("")||'<div class="empty">No products found. Add products in Inventory.</div>';
+}
+function scanBarcode(){let q=$("possearch").value.trim().toLowerCase();let p=db.products.find(x=>x.barcode.toLowerCase()===q);if(p){addCart(p.id);$("possearch").value="";renderPOS()}else toast("Barcode not found")}
+function addCart(id){let p=db.products.find(x=>x.id===id);if(!p)return;if(p.stock<=0)return toast("Out of stock!");let c=cart.find(x=>x.id===id);if(c){if(c.qty>=p.stock)return toast("Not enough stock");c.qty++}else cart.push({id,qty:1});renderCart()}
+function changeQty(id,d){let c=cart.find(x=>x.id===id),p=db.products.find(x=>x.id===id);if(!c)return;c.qty+=d;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.stock){c.qty=p.stock;toast("Stock limit reached")}renderCart()}
+function clearCart(){cart=[];renderCart()}
+function cartAmounts(){let subtotal=cart.reduce((a,c)=>{let p=db.products.find(x=>x.id===c.id);return a+(p?p.price*c.qty:0)},0),discount=Math.min(subtotal,Math.max(0,Number($("discount").value)||0));return {subtotal,discount,total:subtotal-discount}}
+function renderCart(){
+let el=$("cartitems");if(!el)return;
+el.innerHTML=cart.length?cart.map(c=>{let p=db.products.find(x=>x.id===c.id);if(!p)return "";return `<div class="cartline"><div><strong>${esc(p.name)}</strong><div class="muted">${money(p.price)} each</div><div class="qty" style="margin-top:7px"><button onclick="changeQty('${p.id}',-1)">−</button><strong>${c.qty}</strong><button onclick="changeQty('${p.id}',1)">+</button><button class="danger sm" onclick="cart=cart.filter(x=>x.id!=='${p.id}');renderCart()">×</button></div></div><strong>${money(p.price*c.qty)}</strong></div>`}).join(""):'<div class="empty">Your cart is empty.</div>';
+let a=cartAmounts();$("subtotal").textContent=money(a.subtotal);$("discountdisplay").textContent=money(a.discount);$("carttotal").textContent=money(a.total);$("change").textContent=money(Math.max(0,(Number($("cash").value)||0)-a.total));
+}
+function checkout(){
+if(!cart.length)return toast("Add products to the cart first.");
+let a=cartAmounts(),payment=$("payment").value,cash=Number($("cash").value)||0;
+if(payment==="Cash"&&cash<a.total)return toast("Cash received is less than the total.");
+if(payment==="Utang / Credit"&&!$("saleCustomer").value.trim())return toast("Enter the customer's name for utang.");
+for(let c of cart){let p=db.products.find(x=>x.id===c.id);if(!p||p.stock<c.qty)return toast("Stock changed. Check your cart.");}
+let items=cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return {id:p.id,name:p.name,qty:c.qty,price:p.price,cost:p.cost,line:p.price*c.qty}});
+items.forEach(i=>db.products.find(p=>p.id===i.id).stock-=i.qty);
+let sale={id:"S"+Date.now().toString().slice(-9),date:today(),time:new Date().toLocaleTimeString("en-PH"),customer:$("saleCustomer").value.trim(),payment,items,subtotal:a.subtotal,discount:a.discount,total:a.total,cash:payment==="Cash"?cash:a.total,change:payment==="Cash"?cash-a.total:0,cost:items.reduce((n,i)=>n+i.cost*i.qty,0)};
+db.sales.push(sale);
+if(payment==="Utang / Credit")db.utang.push({id:uid(),name:sale.customer,amount:sale.total,paid:0,date:today(),notes:"POS sale "+sale.id});
+saveDB();lastReceipt=sale;showReceipt(sale);cart=[];$("cash").value="";$("discount").value="0";$("saleCustomer").value="";$("payment").value="Cash";refresh();toast("Sale completed successfully!");}
+function showReceipt(s){
+let items=s.items.map(i=>`<div class="receiptline"><span>${esc(i.name)} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join("");
+$("printarea").style.display="block";$("printarea").innerHTML=`<div class="receipt"><h2>${esc(db.settings.name)}</h2><p>${esc(db.settings.address||"")}</p><p>${esc(db.settings.phone||"")}</p><hr><div>Receipt: ${esc(s.id)}</div><div>Date: ${esc(s.date)} ${esc(s.time)}</div><div>Customer: ${esc(s.customer||"Walk-in")}</div><div>Payment: ${esc(s.payment)}</div><hr>${items}<hr><div class="receiptline"><span>Subtotal</span><span>${money(s.subtotal)}</span></div><div class="receiptline"><span>Discount</span><span>${money(s.discount)}</span></div><div class="receiptline"><strong>TOTAL</strong><strong>${money(s.total)}</strong></div><div class="receiptline"><span>Cash received</span><span>${money(s.cash)}</span></div><div class="receiptline"><span>Change</span><span>${money(s.change)}</span></div><hr><p>${esc(db.settings.footer||"Thank you for shopping!")}</p><p>Please come again!</p><button onclick="window.print()">Print receipt</button></div>`;
+window.scrollTo({top:0,behavior:"smooth"});
+}
+function printSale(id){let s=db.sales.find(x=>x.id===id);if(s){showReceipt(s);setTimeout(()=>window.print(),150)}}
+function table(headers,rows){if(!rows.length)return '<div class="empty">No records found.</div>';return `<div class="tablewrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${v??""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
+function renderInventory(){
+let q=($("invsearch").value||"").toLowerCase(),cat=$("invcat").value;
+let list=db.products.filter(p=>(p.name+" "+p.barcode+" "+p.category).toLowerCase().includes(q)&&(!cat||p.category===cat));
+$("inventorycount").textContent=db.products.length+" products";
+$("inventorytable").innerHTML=table(["Product","Category","Cost","Price","Stock","Status","Actions"],list.map(p=>[
+`<div class="row"><img class="productpic" src="${p.image||""}" onerror="this.style.visibility='hidden'"><div><div class="pname">${esc(p.name)}</div><small>${esc(p.barcode||"No SKU")}</small></div></div>`,esc(p.category||"Others"),money(p.cost),money(p.price),p.stock,
+p.stock<=0?'<span class="badge redbg">Out of stock</span>':p.stock<=p.min?'<span class="badge yellowbg">Low stock</span>':'<span class="badge">In stock</span>',
+`<div class="btnrow"><button class="secondary sm" onclick="editProduct('${p.id}')">Edit</button><button class="danger sm" onclick="deleteProduct('${p.id}')">Delete</button></div>`
+]));fillSelects();
+}
+function previewImage(e){let f=e.target.files[0];if(!f)return;if(f.size>2*1024*1024){toast("Image is too large. Choose an image under 2 MB.");e.target.value="";return}let r=new FileReader();r.onload=()=>{productImageData=r.result;$("imagepreview").src=productImageData;$("imagepreview").style.display="block"};r.readAsDataURL(f)}
+function resetProductForm(){ $("productform").reset();$("editid").value="";productImageData="";$("imagepreview").src="";$("imagepreview").style.display="none";$("productformtitle").textContent="Add new product";$("pmin").value=5}
+function saveProduct(e){e.preventDefault();let id=$("editid").value,old=db.products.find(p=>p.id===id);
+let p={id:id||uid(),name:$("pname").value.trim(),category:$("pcat").value.trim()||"Others",cost:Number($("pcost").value),price:Number($("pprice").value),stock:Math.floor(Number($("pstock").value)),min:Math.floor(Number($("pmin").value)||0),barcode:$("pbarcode").value.trim(),expiry:$("pexpiry").value,image:productImageData||(old?old.image:"")};
+if(p.price<0||p.cost<0||p.stock<0)return toast("Values cannot be negative.");
+if(p.barcode&&db.products.some(x=>x.barcode===p.barcode&&x.id!==p.id))return toast("That barcode is already assigned.");
+if(old)db.products[db.products.findIndex(x=>x.id===id)]=p;else db.products.push(p);
+saveDB();resetProductForm();refresh();toast(old?"Product updated":"Product added");}
+function editProduct(id){let p=db.products.find(x=>x.id===id);if(!p)return;$("editid").value=p.id;$("pname").value=p.name;$("pcat").value=p.category;$("pcost").value=p.cost;$("pprice").value=p.price;$("pstock").value=p.stock;$("pmin").value=p.min;$("pbarcode").value=p.barcode;$("pexpiry").value=p.expiry||"";productImageData=p.image||"";$("imagepreview").src=p.image||"";$("imagepreview").style.display=p.image?"block":"none";$("productformtitle").textContent="Edit product";$("productformcard").scrollIntoView({behavior:"smooth"})}
+function deleteProduct(id){let p=db.products.find(x=>x.id===id);if(p&&confirm("Delete "+p.name+"? Historical sales will be retained.")){db.products=db.products.filter(x=>x.id!==id);cart=cart.filter(x=>x.id!==id);saveDB();refresh();toast("Product deleted")}}
+function renderSales(){if(!$("salestable"))return;let f=$("salesfrom").value,t=$("salesto").value,list=db.sales.filter(s=>(!f||s.date>=f)&&(!t||s.date<=t)).slice().reverse();$("salestable").innerHTML=table(["Date","Receipt","Customer","Payment","Items","Total","Action"],list.map(s=>[localDate(s.date),esc(s.id),esc(s.customer||"Walk-in"),esc(s.payment),s.items.reduce((n,i)=>n+i.qty,0),money(s.total),`<button class="secondary sm" onclick="printSale('${s.id}')">Receipt</button>`]))}
+function saveSupplier(e){e.preventDefault();db.suppliers.push({id:uid(),name:$("supname").value.trim(),contact:$("supcontact").value.trim(),phone:$("supphone").value.trim(),address:$("supaddress").value.trim()});e.target.reset();saveDB();refresh();toast("Supplier saved")}
+function renderSuppliers(){$("suppliertable").innerHTML=table(["Supplier","Contact","Phone","Address","Action"],db.suppliers.map(s=>[esc(s.name),esc(s.contact),esc(s.phone),esc(s.address),`<button class="danger sm" onclick="deleteSupplier('${s.id}')">Delete</button>`]));fillSelects()}
+function deleteSupplier(id){if(confirm("Delete this supplier?")){db.suppliers=db.suppliers.filter(s=>s.id!==id);saveDB();refresh()}}
+function savePurchase(e){e.preventDefault();let p=db.products.find(x=>x.id===$("buyproduct").value),qty=Number($("buyqty").value),cost=Number($("buycost").value);if(!p)return toast("Add a product first");if(qty<1||cost<0)return toast("Enter valid purchase values");p.stock+=qty;p.cost=cost;db.purchases.push({id:uid(),date:$("buydate").value||today(),product:p.name,productId:p.id,supplierId:$("buysupplier").value,qty,cost,total:qty*cost,notes:$("buynotes").value});e.target.reset();$("buydate").value=today();saveDB();refresh();toast("Purchase recorded and stock updated")}
+function renderPurchases(){$("purchasetable").innerHTML=table(["Date","Product","Supplier","Qty","Unit cost","Total","Notes"],db.purchases.slice().reverse().map(p=>[localDate(p.date),esc(p.product),esc(db.suppliers.find(s=>s.id===p.supplierId)?.name||"—"),p.qty,money(p.cost),money(p.total),esc(p.notes)]))}
+function saveUtang(e){e.preventDefault();db.utang.push({id:uid(),name:$("utangname").value.trim(),amount:Number($("utangamount").value),paid:0,date:$("utangdate").value||today(),notes:$("utangnotes").value.trim()});e.target.reset();$("utangdate").value=today();saveDB();refresh();toast("Utang recorded")}
+function payUtang(id){let u=db.utang.find(x=>x.id===id);if(!u)return;let balance=u.amount-u.paid;let v=prompt("Enter payment received (balance "+money(balance)+")");if(v===null)return;let amount=Number(v);if(!Number.isFinite(amount)||amount<=0||amount>balance)return toast("Enter a valid payment amount");u.paid+=amount;u.payments=u.payments||[];u.payments.push({date:today(),amount});saveDB();refresh();toast("Payment recorded")}
+function renderUtang(){let balance=db.utang.reduce((n,u)=>n+Math.max(0,u.amount-u.paid),0);$("utangtotal").textContent=money(balance);$("utangcustomers").textContent=new Set(db.utang.filter(u=>u.amount>u.paid).map(u=>u.name.toLowerCase())).size;$("utangtable").innerHTML=table(["Customer","Date","Description","Amount","Paid","Balance","Actions"],db.utang.slice().reverse().map(u=>[esc(u.name),localDate(u.date),esc(u.notes),money(u.amount),money(u.paid),money(Math.max(0,u.amount-u.paid)),`<div class="btnrow"><button class="secondary sm" ${u.amount<=u.paid?"disabled":""} onclick="payUtang('${u.id}')">Record payment</button><button class="danger sm" onclick="deleteUtang('${u.id}')">Delete</button></div>`]))}
+function deleteUtang(id){if(confirm("Delete this utang record?")){db.utang=db.utang.filter(x=>x.id!==id);saveDB();renderUtang()}}
+function saveExpense(e){e.preventDefault();db.expenses.push({id:uid(),name:$("expname").value.trim(),amount:Number($("expamount").value),category:$("expcat").value,date:$("expdate").value||today()});e.target.reset();$("expdate").value=today();saveDB();refresh();toast("Expense saved")}
+function deleteExpense(id){if(confirm("Delete this expense?")){db.expenses=db.expenses.filter(x=>x.id!==id);saveDB();refresh()}}
+function renderExpenses(){$("expensetable").innerHTML=table(["Date","Description","Category","Amount","Action"],db.expenses.slice().reverse().map(x=>[localDate(x.date),esc(x.name),esc(x.category),money(x.amount),`<button class="danger sm" onclick="deleteExpense('${x.id}')">Delete</button>`]))}
+function setReportRange(days){let d=new Date();$("reportto").value=today();if(days===365){$("reportfrom").value=d.getFullYear()+"-01-01"}else{d.setDate(d.getDate()-days);$("reportfrom").value=d.toISOString().slice(0,10)}renderReports()}
+function inReport(date){return (!$("reportfrom").value||date>=$("reportfrom").value)&&(!$("reportto").value||date<=$("reportto").value)}
+function renderReports(){
+if(!$("rRevenue"))return;let sales=db.sales.filter(s=>inReport(s.date)),expenses=db.expenses.filter(x=>inReport(x.date)),revenue=sales.reduce((n,s)=>n+s.total,0),cost=sales.reduce((n,s)=>n+(s.cost??s.items.reduce((a,i)=>a+i.cost*i.qty,0)),0),gross=revenue-cost,exp=expenses.reduce((n,x)=>n+x.amount,0);
+$("rRevenue").textContent=money(revenue);$("rCost").textContent=money(cost);$("rGross").textContent=money(gross);$("rExpenses").textContent=money(exp);$("rNet").textContent=money(gross-exp);
+let sold={};sales.forEach(s=>s.items.forEach(i=>sold[i.name]=(sold[i.name]||0)+i.qty));let best=Object.entries(sold).sort((a,b)=>b[1]-a[1]).slice(0,8);
+$("bestproducts").innerHTML=best.map(([name,q])=>`<div style="margin:12px 0"><div class="between"><strong>${esc(name)}</strong><span>${q} sold</span></div><div class="bar"><span style="width:${q/Math.max(1,best[0][1])*100}%"></span></div></div>`).join("")||'<div class="empty">No sales in this period.</div>';
+let methods={};sales.forEach(s=>methods[s.payment]=(methods[s.payment]||0)+s.total);$("paymentreport").innerHTML=Object.entries(methods).map(([k,v])=>`<div class="between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span>${esc(k)}</span><strong>${money(v)}</strong></div>`).join("")||'<div class="empty">No payments recorded.</div>';
+}
+function saveSettings(e){e.preventDefault();db.settings.name=$("settingname").value.trim();db.settings.address=$("settingaddress").value.trim();db.settings.phone=$("settingphone").value.trim();db.settings.footer=$("settingfooter").value.trim();if(logoData)db.settings.logo=logoData;let f=$("settinglogo").files[0];if(f){if(f.size>2*1024*1024)return toast("Logo must be under 2 MB");let r=new FileReader();r.onload=()=>{db.settings.logo=r.result;logoData="";saveDB();refresh();toast("Settings saved")};r.readAsDataURL(f)}else{saveDB();refresh();toast("Settings saved")}}
+function renderSettings(){let s=db.settings;$("settingname").value=s.name||"";$("settingaddress").value=s.address||"";$("settingphone").value=s.phone||"";$("settingfooter").value=s.footer||""}
+function backupData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sari-sari-backup-"+today()+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded")}
+function restoreData(){let f=$("restorefile").files[0];if(!f)return toast("Choose a backup JSON file first");if(!confirm("Restore backup? This replaces the current store data."))return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x||!Array.isArray(x.products)||!Array.isArray(x.sales))throw Error("Invalid backup");db={...initial(),...x};saveDB();refresh();toast("Backup restored")}catch(e){alert("Could not restore: invalid backup file.")}};r.readAsText(f)}
+function clearAllData(){if(!confirm("WARNING: permanently delete all store records from this browser?"))return;if(!confirm("Last confirmation: this cannot be undone. Download a backup first if needed."))return;localStorage.removeItem(KEY);db=initial();cart=[];saveDB();refresh();toast("Store data cleared")}
+function exportCSV(){let rows=[["Receipt","Date","Customer","Payment","Subtotal","Discount","Total","Cost","Profit"],...db.sales.map(s=>[s.id,s.date,s.customer,s.payment,s.subtotal,s.discount,s.total,s.cost??s.items.reduce((n,i)=>n+i.cost*i.qty,0),s.total-(s.cost??s.items.reduce((n,i)=>n+i.cost*i.qty,0))])];let csv=rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.download="sari-sari-sales-"+today()+".csv";a.click();URL.revokeObjectURL(a.href)}
+$("buydate").value=today();$("utangdate").value=today();$("expdate").value=today();$("reportto").value=today();setReportRange(30);
+document.body.classList.toggle("dark",!!db.dark);
+storeHeader();refresh();
+ownerAuthBootstrap();
+</script>
+</body>
+</html>

@@ -11,15 +11,15 @@
   "theme_color": "#087f70",
   "icons": [
     {
-      "src": "./sinsin-store-logo.svg?v=20261112",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./sinsin-store-logo.svg?v=20261112",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],

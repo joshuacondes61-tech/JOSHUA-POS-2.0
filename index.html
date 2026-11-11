@@ -3,9 +3,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#087f70">
+<script>
+try {
+  const savedPOSTheme = JSON.parse(localStorage.getItem("emeraldSariSari_v1") || "{}");
+  if (savedPOSTheme.dark === true) document.documentElement.classList.add("dark-start");
+} catch (e) {}
+</script>
 <title>JOSHUA POS</title>
 <style>
 :root{--green:#087f70;--green2:#0ba58c;--pale:#e4f6f0;--bg:#f4f7f6;--card:#fff;--text:#172b27;--muted:#71817c;--border:#e2eae7;--red:#dc4545;--yellow:#f4b942;--shadow:0 5px 20px #163b3010}
+html.dark-start{--bg:#101916;--card:#19241f;--text:#edf5f1;--muted:#a1b2aa;--border:#304039;--pale:#243e35;--shadow:0 5px 20px #0003}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
 body.dark{--bg:#101916;--card:#19241f;--text:#edf5f1;--muted:#a1b2aa;--border:#304039;--pale:#243e35;--shadow:0 5px 20px #0003}

@@ -768,7 +768,7 @@ async function startPosScanner(){
    aspectRatio:mobile?1.777:1.333,
    disableFlip:true,
    formatsToSupport:formats,
-   videoConstraints:{width:{ideal:1280},height:{ideal:720}}
+   videoConstraints:mobile?{facingMode:{exact:"environment"},width:{ideal:1280},height:{ideal:720}}:{width:{ideal:1280},height:{ideal:720}}
   },async(decoded)=>{
    if(!posScanActive)return;
    const code=String(decoded||"").trim();

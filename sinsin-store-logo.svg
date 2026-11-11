@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs>
+ <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#16b981"/><stop offset="1" stop-color="#056047"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe58a"/><stop offset="1" stop-color="#d99b18"/></linearGradient>
+ <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#002d20" flood-opacity=".35"/></filter>
+</defs>
+<circle cx="300" cy="300" r="286" fill="#062d22"/>
+<circle cx="300" cy="300" r="266" fill="url(#g)" stroke="#a8f36a" stroke-width="12"/>
+<circle cx="300" cy="300" r="245" fill="#f8fff9" stroke="#073f2e" stroke-width="9"/>
+<path d="M112 204h376l-24-72H136z" fill="#087f54" stroke="#064b37" stroke-width="8"/>
+<path d="M136 132h55l-8 72h-63zM246 132h55l-2 72h-55zM356 132h55l13 72h-55zM466 132h22l24 72h-57z" fill="#fff"/>
+<path d="M112 204h376v24c0 25-39 25-39 0 0 25-39 25-39 0 0 25-39 25-39 0 0 25-39 25-39 0 0 25-39 25-39 0 0 25-39 25-39 0 0 25-39 25-39 0v-24z" fill="#087f54" stroke="#064b37" stroke-width="7"/>
+<g filter="url(#sh)">
+ <path d="M175 253h250l-22 91H198z" fill="#e9fff5" stroke="#07533b" stroke-width="12" stroke-linejoin="round"/>
+ <path d="M193 272h211M201 303h194M210 334h176M225 253l-8 91M275 253l-3 91M325 253l3 91M375 253l9 91" stroke="#087f54" stroke-width="8"/>
+ <circle cx="225" cy="357" r="14" fill="#063e2d"/><circle cx="380" cy="357" r="14" fill="#063e2d"/>
+</g>
+<g transform="translate(385 230)" fill="#073f2e"><rect x="0" y="0" width="105" height="74" rx="7" fill="#fff" stroke="#073f2e" stroke-width="8"/><path d="M13 12v50m9-50v50m12-50v50m7-50v50m13-50v50m9-50v50m12-50v50m8-50v50" stroke="#073f2e" stroke-width="5"/></g>
+<path d="M100 385h400" stroke="#a8e96c" stroke-width="8" stroke-linecap="round"/>
+<text x="300" y="420" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="83" font-weight="900" letter-spacing="2" fill="#073f2e" stroke="#073f2e" stroke-width="4" paint-order="stroke">SINSIN</text>
+<text x="300" y="486" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="63" font-weight="900" letter-spacing="8" fill="#10a66d">STORE</text>
+<path d="M125 515h350" stroke="#d6a62b" stroke-width="5" stroke-linecap="round"/>
+<text x="300" y="550" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" letter-spacing="2" fill="#07533b">SHOP SMART • SAVE MORE</text>
+<path d="M270 75l30-28 30 28-30 28z" fill="url(#gold)" stroke="#a9750c" stroke-width="5"/>
+</svg>

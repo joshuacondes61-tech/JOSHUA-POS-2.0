@@ -413,14 +413,25 @@ async function openCloudWorkspace(){
   const result=await cloudRequest("state",{method:"GET"});
   cloudRevision=Number(result.revision||0);
   if(cloudRevision===0){
-    // First cloud setup: preserve and migrate this browser's existing records.
+    // First cloud setup: preserve all non-product records while clearing the product catalog once.
+    db.products=[];
+    db.settings={...(db.settings||{}),productCatalogCleared_v1:true};
+    try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}
     await uploadCloudState();
-    toast("Cloud account ready. This device's POS data was uploaded.");
+    toast("Cloud account ready. Product catalog cleared; other store records were preserved.");
   }else{
     // Existing cloud data is authoritative on every newly signed-in device.
     applyCloudState(result.state||{});
     cloudReady=true;
-    toast("Cloud data loaded successfully.");
+    if(!db.settings.productCatalogCleared_v1){
+      // One-time owner-confirmed product-only cleanup. Sales and all other records remain intact.
+      db.products=[];
+      db.settings={...db.settings,productCatalogCleared_v1:true};
+      saveDB();
+      toast("Product catalog cleared. Sales, purchases, suppliers, expenses, and utang were preserved.");
+    }else{
+      toast("Cloud data loaded successfully.");
+    }
   }
   ownerAuthUnlock();
 }
@@ -531,22 +542,6 @@ const initial=()=>({products:[],sales:[],suppliers:[],purchases:[],expenses:[],u
 let db=loadDB(),cart=[],productImageData="",logoData="",lastReceipt=null,toastTimer;
 function loadDB(){try{return {...initial(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch(e){return initial()}}
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Storage is full. Please remove large images or download a backup, then try again.")}scheduleCloudSave()}
-// Adds the supplied product names to the catalog once, without replacing existing records.
-const catalogProductNames = ["COCA COLA 1L", "MILO", "MEGA SARDINES", "MAGIC SARAP", "KOPIKO BLANCA", "PEPSI GAMAY", "COKE GAMAY", "ENERGEN", "KERATIN SHAMPOO", "KERATIN CONDITIONER", "STING", "YAKULT", "MIK MIK", "MOUNTAIN DEW BOTTLE", "ROYAL PLASTIC", "MOUNTAIN DEW PLASTIC", "ROYAL 1 LTR", "ROYAL BOTTLE", "TANDUAY LIGHT SR.", "TANDUAY LIGHT JR.", "TANDUAY LIGHT LONG NECK", "TANDUAY DARK", "GENEBRA ROUND", "GENEBRA", "EMPERADOR LIGHT JR.", "EMPERADOR LIGHT SR.", "YOUNGSTOWN SARDINES", "LUCK7 SARDINES", "FAMILY SARDINES", "ARGENTINA CORNED BEEF", "LUCK 7 CORNED BEEF", "MEATY CORNED BEEF", "ARGENTINA BEEF LOAF", "FIESTA BEEFLOAF", "HOLIDAY BEEFLOAF", "FRESCA TUNA AFRITADA", "CENTURY TUNA", "555 TUNA", "FRESCA TUNA FLAKES AND OIL", "FRESCA TUNA ADOBO", "LUCK ME NOODLES", "LUCKY ME PANCIT CANTON", "LUCKEY ME NOODLES LABUYO", "GREAT TASTE WHITE", "KOPIKO BLANCA TWIN PACK", "KOPIKO BROWN", "KOPIKO BROWN TWIN PACK", "KOPIKO BLACK", "KOPIKO BLACK TWIN PACK", "NESCAFE CREAMY WHITE", "NESCAFE CREAMY LATTE", "NESCAFE ORIGINAL TWIN PACK", "NESCAFE ORIGINAL", "BEARBRAND", "BIRCH TREE", "BIRCH TREE TWIN PACK", "WINGS POWDER", "WINGS BAR", "CHAMPION BAR", "CHAMPION POWDER", "TIDE POWDER", "SURF POWDER", "SURF BAR", "TIDE TWIN PACK POWDER", "ARIEL POWDER", "ARIEL TWINPACK POWDER", "JOY DISWASHING LIQUID", "SURF FABRIC CONDITIONER", "DOWNY", "SUNSILK SHAMPOO", "CREAMSILK SHAMPOO", "CREAMSILK CONDITIONER", "CLOSE UP", "HAPPE TOOTHPASTE", "COLGATE TOOTHPASTE", "NESCAFE STICK", "SILVERSWAN TOYO GAMAY", "SILVERSWAN TOYO DAKO", "SILVERSWAN SUKA DAKO", "SILVERSWAN SUKA GAMAY", "PAPA KETCHUP", "BANANA KETCHUP", "DELMONTE TIDBITS", "CALUMET", "MISUA", "CRISPY FRY", "TASTY FRY", "BROWN SUGAR 1/4", "WHITE SUGAR 1/4", "STAR MARGARINE", "HANSEL", "COMBI", "FUDGEE BAR", "REBISCO CRACKERS", "MAGIC FLAKES", "REBISCO EXTREME", "TIGER", "TOPPS", "BINGO", "FITA", "CALCHEESE", "WAFELLO", "CRACKLINGS", "MUNCHER", "YUMSHOTS", "SUPERCRUNCH DAKO", "NOVA", "CRACKLINGS GAMAY", "OISHI GAMAY", "FISH CRACKER", "MANG JUAN", "POTATOES", "KIREI", "CHEESE RINGS", "EDEN", "STAR MARGARINE TWIN PACK", "CHEEZE WIZ TWIN PACK", "TANG ORANGE", "NESTEA", "TANG PINEAPPLE", "TANG LEMON", "GINISA", "MANG TOMAS", "KNOR SINIGANG MIX", "MAMA SITAS", "REXONA", "SALON PAS", "EARTH SCRUB", "KIWI", "BUG OFF", "SHAVE", "HEAD AND SHOULDERS", "PALMOLIVE SHAMPOO", "WAFER", "JAM JAM", "PRITONG BANGUS", "OK JUICE", "COBRA", "PREMIER", "JUICY COLOGNE", "ETHYL ALCOHOL", "EFFICASCENT EXTREME", "EFFICASCENT EXTRA STRENGTH", "ACEITI DE MANZANILLA", "MAMAS LOVE", "SILVERSWAN TOYO PLASTIC", "SNOW BEAR"];
-function addCatalogNames(){
-  let changed=false;
-  const existing=new Set(db.products.map(p=>String(p.name||"").trim().toLowerCase()));
-  catalogProductNames.forEach(name=>{
-    const key=name.trim().toLowerCase();
-    if(!existing.has(key)){
-      db.products.push({id:uid(),name,category:"Others",cost:0,price:0,stock:0,min:0,barcode:"",expiry:"",image:""});
-      existing.add(key); changed=true;
-    }
-  });
-  if(changed) saveDB();
-}
-addCatalogNames();
-
 function toast(s){$("toast").textContent=s;$("toast").style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").style.display="none",2600)}
 function navigate(p){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+p));document.querySelectorAll("[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===p));window.scrollTo({top:0,behavior:"smooth"});if(p==="dashboard")renderDashboard();if(p==="pos"){renderPOS();renderCart()}if(p==="inventory")renderInventory();if(p==="sales")renderSales();if(p==="purchases")renderPurchases();if(p==="suppliers")renderSuppliers();if(p==="utang")renderUtang();if(p==="expenses")renderExpenses();if(p==="reports")renderReports();if(p==="settings")renderSettings()}
 function toggleDark(){db.dark=!db.dark;document.body.classList.toggle("dark",db.dark);saveDB();toast(db.dark?"Dark mode enabled":"Light mode enabled")}

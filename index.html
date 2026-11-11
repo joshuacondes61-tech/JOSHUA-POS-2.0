@@ -125,8 +125,8 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 <div id="ownerAuth">
  <div class="auth-card">
   <div class="auth-mark">🛒</div>
-  <h1 id="authHeading">Owner sign in</h1>
-  <p class="auth-sub" id="authSub">Sign in to open your JOSHUA POS store workspace.</p>
+  <h1 id="authHeading">Restoring secure session…</h1>
+  <p class="auth-sub" id="authSub">Checking your cloud account. Please wait.</p>
   <form id="ownerAuthForm" onsubmit="submitOwnerAuth(event)">
    <div class="auth-field"><label for="ownerUsername">OWNER USERNAME</label><input id="ownerUsername" autocomplete="username" required minlength="3" maxlength="40" placeholder="Enter your username"></div>
    <div class="auth-field"><label for="ownerPassword">PASSWORD</label><input id="ownerPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Enter your password"></div>
@@ -447,22 +447,38 @@ async function ownerSignOut(){
   ownerAuthScreen();
   ownerAuthMessage("You have signed out.");
 }
+function ownerAuthLoading(){
+  $("authHeading").textContent="Restoring secure session…";
+  $("authSub").textContent="Checking your cloud account. Please wait.";
+  $("ownerAuthForm").style.display="none";
+  $("ownerAuthError").textContent="";
+  $("ownerAuth").style.display="grid";
+  document.body.classList.add("auth-locked");
+}
 async function ownerAuthBootstrap(){
-  ownerAuthMessage("");
+  ownerAuthLoading();
   $("ownerAuthSubmit").disabled=true;
   try{
     const status=await cloudRequest("auth_status",{method:"GET"});
     ownerSetupMode=!status.configured;
-    ownerAuthScreen();
     const token=cloudToken();
     if(token){
       try{await openCloudWorkspace();return}
-      catch(error){sessionStorage.removeItem(CLOUD_TOKEN_KEY);cloudReady=false;if(error.status!==401)ownerAuthMessage(error.message)}
+      catch(error){
+        sessionStorage.removeItem(CLOUD_TOKEN_KEY);cloudReady=false;
+        ownerAuthScreen();
+        $("ownerAuthForm").style.display="block";
+        if(error.status!==401)ownerAuthMessage(error.message);
+      }
+    }else{
+      ownerAuthScreen();
+      $("ownerAuthForm").style.display="block";
     }
     $("ownerAuth").style.display="grid";
     document.body.classList.add("auth-locked");
   }catch(error){
     ownerSetupMode=false;ownerAuthScreen();
+    $("ownerAuthForm").style.display="block";
     ownerAuthMessage("Cannot reach the cloud service. Check your connection and reload this page.");
     $("ownerAuth").style.display="grid";
     document.body.classList.add("auth-locked");

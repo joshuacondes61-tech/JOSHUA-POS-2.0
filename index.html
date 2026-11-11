@@ -361,7 +361,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
   <div class="between"><h2 style="margin:0">📷 Scan product barcode</h2><button type="button" class="danger sm" onclick="stopInventoryScanner()">Close</button></div>
   <p class="muted" style="margin:10px 0">Point your Android phone's rear camera at the product barcode.</p>
   <div id="inventoryScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
-  <p id="inventoryScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p>
+  <p id="inventoryScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p><button type="button" id="inventoryTorchButton" class="secondary full" style="margin-top:10px;display:none" onclick="toggleInventoryTorch()">🔦 Turn on flashlight</button><p class="muted" style="font-size:12px;margin-top:8px">Keep the phone about 10–20 cm from the barcode. Move slowly until the image becomes sharp; avoid glare.</p>
  </div>
 </div>
 
@@ -627,7 +627,18 @@ async function startInventoryScanner(){
     ];
     await inventoryQrScanner.start(
       {facingMode:"environment"},
-      {fps:12,qrbox:(w,h)=>({width:Math.min(300,w*0.85),height:Math.min(150,h*0.55)}),aspectRatio:1.5,formatsToSupport},
+      {
+        fps:15,
+        qrbox:(w,h)=>({width:Math.min(420,w*0.92),height:Math.min(190,h*0.48)}),
+        aspectRatio:1.6,
+        formatsToSupport,
+        videoConstraints:{
+          facingMode:{ideal:"environment"},
+          width:{ideal:1920},
+          height:{ideal:1080},
+          advanced:[{focusMode:"continuous"}]
+        }
+      },
       async(decodedText)=>{
         if(!inventoryScanActive)return;
         inventoryScanActive=false;
@@ -639,12 +650,34 @@ async function startInventoryScanner(){
       ()=>{}
     );
     inventoryScanActive=true;
-    status.textContent="Camera ready. Point the rear camera at the product barcode.";
+    status.textContent="Camera ready. Hold the phone 10–20 cm away and move slowly until the barcode is sharp.";
+    const torchButton=$("inventoryTorchButton");
+    if(torchButton){
+      torchButton.dataset.enabled="false";
+      torchButton.style.display="block";
+      torchButton.textContent="🔦 Turn on flashlight";
+      try{
+        const caps=inventoryQrScanner.getRunningTrackCapabilities();
+        torchButton.style.display=caps&&caps.torch?"block":"none";
+      }catch(e){torchButton.style.display="none"}
+    }
   }catch(e){
     await stopInventoryScanner();
     const msg=e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in Safari or Chrome settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.";
     toast(msg);
   }
+}
+async function toggleInventoryTorch(){
+  const button=$("inventoryTorchButton");
+  if(!inventoryQrScanner||!button)return;
+  try{
+    const capabilities=inventoryQrScanner.getRunningTrackCapabilities();
+    if(!capabilities||!capabilities.torch){toast("Flashlight control is not supported by this camera.");return}
+    const enabled=button.dataset.enabled!=="true";
+    await inventoryQrScanner.applyVideoConstraints({advanced:[{torch:enabled}]});
+    button.dataset.enabled=String(enabled);
+    button.textContent=enabled?"🔦 Turn off flashlight":"🔦 Turn on flashlight";
+  }catch(e){toast("Could not change flashlight. Your phone may not support camera torch control.")}
 }
 async function stopInventoryScanner(){
   inventoryScanActive=false;
@@ -654,6 +687,7 @@ async function stopInventoryScanner(){
     inventoryQrScanner=null;
   }
   const reader=$("inventoryScanReader");if(reader)reader.innerHTML="";
+  const torchButton=$("inventoryTorchButton");if(torchButton){torchButton.style.display="none";torchButton.dataset.enabled="false"}
   const modal=$("inventoryScanner");if(modal)modal.style.display="none";
 }
 async function lookupScannedProduct(code){

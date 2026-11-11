@@ -268,6 +268,30 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 @media(prefers-reduced-motion:reduce){.dashboard-page .chartbar{animation:none!important}}
 
 
+
+/* Animated SINSIN STORE welcome mascot */
+.dash-hero{padding-right:28px}
+.sinsin-mascot{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;flex:0 0 190px;min-height:158px}
+.mascot-svg{display:block;width:145px;height:145px;overflow:visible;filter:drop-shadow(0 9px 10px #003e3438)}
+.mascot-bounce{transform-origin:90px 155px;animation:mascotBounce 2.8s ease-in-out infinite}
+.mascot-wave{transform-origin:43px 91px;animation:mascotWave .85s ease-in-out infinite alternate}
+.mascot-speech{position:absolute;z-index:3;top:0;right:-10px;max-width:165px;padding:8px 11px;border:1px solid #ffffff80;border-radius:13px;background:#f4fff9;color:#075e52;font-size:11px;line-height:1.35;box-shadow:0 7px 18px #003e3428;animation:mascotHello 2.8s ease-in-out infinite}
+.mascot-speech:after{content:"";position:absolute;left:22px;bottom:-7px;width:12px;height:12px;background:#f4fff9;border-right:1px solid #ffffff80;border-bottom:1px solid #ffffff80;transform:rotate(45deg)}
+.mascot-speech span{margin-left:4px}
+.mascot-sparkles{transform-origin:center;animation:mascotSparkle 1.8s ease-in-out infinite alternate}
+@keyframes mascotBounce{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(-2deg)}}
+@keyframes mascotWave{0%{transform:rotate(-12deg)}100%{transform:rotate(22deg)}}
+@keyframes mascotHello{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.035)}}
+@keyframes mascotSparkle{from{opacity:.35;transform:scale(.8) rotate(-12deg)}to{opacity:1;transform:scale(1.1) rotate(12deg)}}
+@media(max-width:680px){
+ .dash-hero{padding-right:18px}
+ .sinsin-mascot{position:absolute;right:5px;top:38px;min-height:0;width:112px;flex:0 0 112px;opacity:.98}
+ .mascot-svg{width:105px;height:105px}
+ .mascot-speech{top:-18px;right:2px;max-width:130px;padding:6px 8px;font-size:9px}
+ .dash-hero-copy{max-width:calc(100% - 65px)}
+ .dash-hero-actions{position:relative;z-index:4}
+}
+@media(prefers-reduced-motion:reduce){.mascot-bounce,.mascot-wave,.mascot-speech,.mascot-sparkles{animation:none!important}}
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
@@ -322,7 +346,7 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 <main class="main">
 <section class="page active dashboard-page" id="page-dashboard">
- <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1 id="dashboardGreeting">Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
+ <div class="dash-hero"><div class="dash-hero-copy"><span class="dash-kicker">STORE OVERVIEW</span><h1 id="dashboardGreeting">Good day! 👋</h1><p>Your SINSIN STORE performance at a glance.</p><span class="dash-date" id="todaybadge"></span></div><div class="dash-hero-actions"><button onclick="navigate('pos')">＋ New sale</button><button class="dash-hero-secondary" onclick="navigate('inventory')">＋ Add product</button></div><div class="sinsin-mascot" role="img" aria-label="Cute SINSIN STORE mascot waving and welcoming you"><div class="mascot-speech">Welcome to <strong>SINSIN STORE!</strong><span>💚</span></div><svg class="mascot-svg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="91" cy="163" rx="48" ry="8" fill="#003e3428"/><g class="mascot-bounce"><path d="M62 45V34c0-18 12-27 29-27s29 9 29 27v11" fill="none" stroke="#d7fff1" stroke-width="9" stroke-linecap="round"/><path d="M62 45V34c0-18 12-27 29-27s29 9 29 27v11" fill="none" stroke="#087f70" stroke-width="5" stroke-linecap="round"/><path d="M42 48Q42 39 53 39H129Q140 39 140 50L147 139Q148 151 135 153H48Q35 152 36 139Z" fill="#f5fff9" stroke="#064e3b" stroke-width="5"/><path d="M43 53Q43 45 54 45H128Q137 45 138 54L143 83H39Z" fill="#0c9a7c"/><path d="M40 83H143L147 139Q148 151 135 153H48Q35 152 36 139Z" fill="#12a889"/><path d="M40 83H143" stroke="#d5fff0" stroke-width="3"/><text x="91" y="72" fill="white" font-size="13" font-weight="900" text-anchor="middle" letter-spacing="1">SINSIN</text><circle cx="72" cy="105" r="5.5" fill="#073f37"/><circle cx="110" cy="105" r="5.5" fill="#073f37"/><circle cx="74" cy="103" r="1.8" fill="white"/><circle cx="112" cy="103" r="1.8" fill="white"/><path d="M82 119Q91 129 101 119" fill="none" stroke="#073f37" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="59" cy="117" rx="7" ry="4" fill="#ff9d9d" opacity=".7"/><ellipse cx="123" cy="117" rx="7" ry="4" fill="#ff9d9d" opacity=".7"/><g class="mascot-wave"><path d="M43 91Q27 85 23 67" fill="none" stroke="#064e3b" stroke-width="9" stroke-linecap="round"/><path d="M23 67Q8 60 15 44Q18 39 23 45L28 52Q30 37 36 41Q42 44 36 59L31 73" fill="#12a889" stroke="#064e3b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g><path d="M139 95Q153 99 157 112" fill="none" stroke="#064e3b" stroke-width="8" stroke-linecap="round"/><path d="M59 151L57 160M121 151L125 160" stroke="#064e3b" stroke-width="8" stroke-linecap="round"/><path d="M47 161H64M116 161H133" stroke="#f5fff9" stroke-width="6" stroke-linecap="round"/></g><g class="mascot-sparkles" fill="#d8fff1"><path d="M155 39l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/><path d="M24 103l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></g></svg></div><div class="dash-hero-orb" aria-hidden="true"></div></div>
  <div class="grid dashgrid">
   <div class="card stat"><div><small>Today's sales</small><div class="num" id="dashsales">₱0.00</div><small id="dashtransactions">0 transactions</small></div><div class="emoji">💰</div></div>
   <div class="card stat"><div><small>Gross profit today</small><div class="num" id="dashprofit">₱0.00</div><small>Sales less item cost</small></div><div class="emoji">📈</div></div>

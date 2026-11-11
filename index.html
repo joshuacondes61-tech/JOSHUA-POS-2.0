@@ -726,6 +726,16 @@ button,.navbtn,.iconbtn{min-height:42px}
    <hr><h3>Display</h3><button class="secondary full" data-theme-toggle onclick="toggleDark()">🌙 Toggle dark mode</button>
   </div>
  </div>
+ <div class="card" style="margin-top:16px">
+  <h2>📱 Personal GCash QR</h2>
+  <p class="muted">Upload your own GCash receive-money QR. It is saved in your POS settings and shown to the cashier during checkout. Keep this QR private.</p>
+  <div class="formgrid">
+   <div class="field"><label>Upload GCash QR image (PNG or JPG, up to 1.5 MB)</label><input id="settingGcashQrFile" type="file" accept="image/png,image/jpeg"></div>
+   <div class="field"><label>Saved QR preview</label><div style="min-height:150px;display:grid;place-items:center;border:1px dashed var(--border);border-radius:12px;padding:10px"><img id="settingGcashQrPreview" alt="Saved personal GCash QR" style="display:none;max-width:100%;max-height:190px;object-fit:contain"><span id="settingGcashQrEmpty" class="muted">No GCash QR uploaded yet.</span></div></div>
+  </div>
+  <div class="btnrow" style="margin-top:12px"><button type="button" onclick="saveGcashQr()">Save GCash QR</button><button type="button" class="danger" onclick="removeGcashQr()">Remove saved QR</button></div>
+  <p class="muted" style="font-size:12px;margin:10px 0 0">Manual verification only: the cashier must open the receiving GCash account and confirm the actual money was received before completing a sale. A screenshot alone is not proof.</p>
+ </div>
  <div class="card" style="margin-top:16px"><h2>About this POS</h2><p class="muted">The JOSHUA POS and Inventory Management System is a mobile-friendly application designed to simplify daily store operations. It helps manage product inventory, process sales, calculate change, print receipts, and monitor sales reports.</p><p class="muted">Developed by: Joshua Condes.</p></div>
 </section>
 </main>
@@ -739,6 +749,18 @@ button,.navbtn,.iconbtn{min-height:42px}
  <button data-page="settings" onclick="navigate('settings')"><span>⚙️</span>More</button>
 </nav>
 <div id="toast" class="toast" style="display:none"></div>
+<div id="gcashCheckoutModal" style="display:none;position:fixed;inset:0;z-index:11000;background:#000c;padding:16px;align-items:center;justify-content:center">
+ <div style="width:min(100%,440px);max-height:92dvh;overflow:auto;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:0 20px 70px #0005">
+  <div class="between"><h2 style="margin:0">📱 GCash payment</h2><button type="button" class="danger sm" onclick="cancelGcashPayment()">✕ Close</button></div>
+  <p class="muted" style="margin:12px 0 6px">Ask the customer to scan your personal GCash QR and pay this exact amount.</p>
+  <div class="totalbig" id="gcashCheckoutAmount" style="text-align:center;margin:10px 0 14px">₱0.00</div>
+  <div style="display:grid;place-items:center;background:#fff;border-radius:14px;padding:12px;min-height:180px"><img id="gcashCheckoutQr" alt="Personal GCash QR code" style="display:block;max-width:100%;width:min(100%,280px);max-height:280px;object-fit:contain"></div>
+  <p style="font-size:12px;color:var(--muted);margin:12px 0">After the customer pays, check your own GCash app or transaction history. Confirm the amount and incoming transaction before proceeding.</p>
+  <div class="field"><label>GCash reference number *</label><input id="gcashReferenceInput" autocomplete="off" placeholder="Enter the reference number"></div>
+  <label style="display:flex;align-items:flex-start;gap:9px;margin-top:13px;color:var(--text);font-size:13px"><input id="gcashManualVerified" type="checkbox" style="width:auto;margin-top:2px"><span>I personally checked my GCash account and confirmed that the full amount was received.</span></label>
+  <div class="btnrow" style="margin-top:16px"><button type="button" class="full" onclick="confirmGcashPayment()">Confirm received payment &amp; complete sale</button><button type="button" class="neutral full" onclick="cancelGcashPayment()">Cancel — do not complete sale</button></div>
+ </div>
+</div>
 <div id="printarea" style="display:none"></div>
 <div id="inventoryScanner" class="inventory-scanner-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
  <div class="inventory-scanner-card" style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
@@ -1343,16 +1365,47 @@ let a=cartAmounts(),payment=$("payment").value,cash=Number($("cash").value)||0;
 if(payment==="Cash"&&cash<a.total)return toast("Cash received is less than the total.");
 if(payment==="Utang / Credit"&&!$("saleCustomer").value.trim())return toast("Enter the customer's name for utang.");
 for(let c of cart){let p=db.products.find(x=>x.id===c.id);if(!p||p.stock<c.qty)return toast("Stock changed. Check your cart.");}
-let items=cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return {id:p.id,name:p.name,qty:c.qty,price:p.price,cost:p.cost,line:p.price*c.qty}});
-items.forEach(i=>db.products.find(p=>p.id===i.id).stock-=i.qty);
-let sale={id:"S"+Date.now().toString().slice(-9),date:today(),time:new Date().toLocaleTimeString("en-PH"),customer:$("saleCustomer").value.trim(),payment,items,subtotal:a.subtotal,discount:a.discount,total:a.total,cash:payment==="Cash"?cash:a.total,change:payment==="Cash"?cash-a.total:0,cost:items.reduce((n,i)=>n+i.cost*i.qty,0)};
-db.sales.push(sale);
-addStoreNotification("sale:"+sale.id,"sale","Sale completed","Receipt "+sale.id+" · "+money(sale.total)+" · "+(sale.payment||"Payment"));
-if(payment==="Utang / Credit")db.utang.push({id:uid(),name:sale.customer,amount:sale.total,paid:0,date:today(),notes:"POS sale "+sale.id});
-saveDB();lastReceipt=sale;showReceipt(sale);cart=[];$("cash").value="";$("discount").value="0";$("saleCustomer").value="";$("payment").value="Cash";refresh();toast("Sale completed successfully!");}
+if(payment==="GCash"){
+ const qr=db.settings&&db.settings.gcashQr;
+ if(!qr)return toast("Upload your personal GCash QR first in Settings.");
+ $("gcashCheckoutAmount").textContent=money(a.total);
+ $("gcashCheckoutQr").src=qr;
+ $("gcashReferenceInput").value="";
+ $("gcashManualVerified").checked=false;
+ $("gcashCheckoutModal").style.display="flex";
+ return;
+}
+completeCurrentSale(payment,{cash});
+}
+function confirmGcashPayment(){
+ const reference=$("gcashReferenceInput").value.trim();
+ if(!reference)return toast("Enter the GCash reference number.");
+ if(!$("gcashManualVerified").checked)return toast("Confirm that you checked the actual incoming GCash transaction.");
+ if(!cart.length){cancelGcashPayment();return toast("The cart is empty. No sale was completed.");}
+ for(let c of cart){let p=db.products.find(x=>x.id===c.id);if(!p||p.stock<c.qty){cancelGcashPayment();return toast("Stock changed. Check your cart.");}}
+ completeCurrentSale("GCash",{cash:cartAmounts().total,gcashReference:reference,gcashVerifiedAt:new Date().toISOString()});
+ cancelGcashPayment();
+}
+function cancelGcashPayment(){
+ $("gcashCheckoutModal").style.display="none";
+ $("gcashCheckoutQr").removeAttribute("src");
+}
+function completeCurrentSale(payment,meta={}){
+ const a=cartAmounts();
+ for(let c of cart){let p=db.products.find(x=>x.id===c.id);if(!p||p.stock<c.qty)return toast("Stock changed. Check your cart.");}
+ const items=cart.map(c=>{let p=db.products.find(x=>x.id===c.id);return {id:p.id,name:p.name,qty:c.qty,price:p.price,cost:p.cost,line:p.price*c.qty}});
+ items.forEach(i=>db.products.find(p=>p.id===i.id).stock-=i.qty);
+ const sale={id:"S"+Date.now().toString().slice(-9),date:today(),time:new Date().toLocaleTimeString("en-PH"),customer:$("saleCustomer").value.trim(),payment,items,subtotal:a.subtotal,discount:a.discount,total:a.total,cash:payment==="Cash"?Number(meta.cash||0):a.total,change:payment==="Cash"?Number(meta.cash||0)-a.total:0,cost:items.reduce((n,i)=>n+i.cost*i.qty,0)};
+ if(payment==="GCash"){sale.gcashReference=meta.gcashReference;sale.gcashVerifiedAt=meta.gcashVerifiedAt;sale.gcashVerification="Manual cashier verification";}
+ db.sales.push(sale);
+ addStoreNotification("sale:"+sale.id,"sale","Sale completed","Receipt "+sale.id+" · "+money(sale.total)+" · "+(sale.payment||"Payment"));
+ if(payment==="Utang / Credit")db.utang.push({id:uid(),name:sale.customer,amount:sale.total,paid:0,date:today(),notes:"POS sale "+sale.id});
+ saveDB();lastReceipt=sale;showReceipt(sale);cart=[];$("cash").value="";$("discount").value="0";$("saleCustomer").value="";$("payment").value="Cash";refresh();toast("Sale completed successfully!");
+}
+function gcashReceiptLine(s){return s.payment==="GCash"?'<div>GCash reference: '+esc(s.gcashReference||"—")+'</div><div>Verification: Manual cashier check</div>':"";}
 function showReceipt(s){
 let items=s.items.map(i=>`<div class="receiptline"><span>${esc(i.name)} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join("");
-$("printarea").style.display="block";$("printarea").innerHTML=`<div class="receipt"><h2>${esc(db.settings.name)}</h2><p>${esc(db.settings.address||"")}</p><p>${esc(db.settings.phone||"")}</p><hr><div>Receipt: ${esc(s.id)}</div><div>Date: ${esc(s.date)} ${esc(s.time)}</div><div>Customer: ${esc(s.customer||"Walk-in")}</div><div>Payment: ${esc(s.payment)}</div><hr>${items}<hr><div class="receiptline"><span>Subtotal</span><span>${money(s.subtotal)}</span></div><div class="receiptline"><span>Discount</span><span>${money(s.discount)}</span></div><div class="receiptline"><strong>TOTAL</strong><strong>${money(s.total)}</strong></div><div class="receiptline"><span>Cash received</span><span>${money(s.cash)}</span></div><div class="receiptline"><span>Change</span><span>${money(s.change)}</span></div><hr><p>${esc(db.settings.footer||"Thank you for shopping!")}</p><p>Please come again!</p><button onclick="window.print()">Print receipt</button></div>`;
+$("printarea").style.display="block";$("printarea").innerHTML=`<div class="receipt"><h2>${esc(db.settings.name)}</h2><p>${esc(db.settings.address||"")}</p><p>${esc(db.settings.phone||"")}</p><hr><div>Receipt: ${esc(s.id)}</div><div>Date: ${esc(s.date)} ${esc(s.time)}</div><div>Customer: ${esc(s.customer||"Walk-in")}</div><div>Payment: ${esc(s.payment)}</div>${gcashReceiptLine(s)}<hr>${items}<hr><div class="receiptline"><span>Subtotal</span><span>${money(s.subtotal)}</span></div><div class="receiptline"><span>Discount</span><span>${money(s.discount)}</span></div><div class="receiptline"><strong>TOTAL</strong><strong>${money(s.total)}</strong></div><div class="receiptline"><span>Cash received</span><span>${money(s.cash)}</span></div><div class="receiptline"><span>Change</span><span>${money(s.change)}</span></div><hr><p>${esc(db.settings.footer||"Thank you for shopping!")}</p><p>Please come again!</p><button onclick="window.print()">Print receipt</button></div>`;
 window.scrollTo({top:0,behavior:"smooth"});
 }
 function printSale(id){let s=db.sales.find(x=>x.id===id);if(s){showReceipt(s);setTimeout(()=>window.print(),150)}}
@@ -1521,7 +1574,27 @@ $("bestproducts").innerHTML=best.map(([name,q])=>`<div style="margin:12px 0"><di
 let methods={};sales.forEach(s=>methods[s.payment]=(methods[s.payment]||0)+s.total);$("paymentreport").innerHTML=Object.entries(methods).map(([k,v])=>`<div class="between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span>${esc(k)}</span><strong>${money(v)}</strong></div>`).join("")||'<div class="empty">No payments recorded.</div>';
 }
 function saveSettings(e){e.preventDefault();db.settings.name=$("settingname").value.trim();db.settings.address=$("settingaddress").value.trim();db.settings.phone=$("settingphone").value.trim();db.settings.footer=$("settingfooter").value.trim();if(logoData)db.settings.logo=logoData;let f=$("settinglogo").files[0];if(f){if(f.size>2*1024*1024)return toast("Logo must be under 2 MB");let r=new FileReader();r.onload=()=>{db.settings.logo=r.result;logoData="";saveDB();refresh();toast("Settings saved")};r.readAsDataURL(f)}else{saveDB();refresh();toast("Settings saved")}}
-function renderSettings(){let s=db.settings;$("settingname").value=s.name||"";$("settingaddress").value=s.address||"";$("settingphone").value=s.phone||"";$("settingfooter").value=s.footer||""}
+function renderSettings(){
+ let s=db.settings;
+ $("settingname").value=s.name||"";$("settingaddress").value=s.address||"";$("settingphone").value=s.phone||"";$("settingfooter").value=s.footer||"";
+ const preview=$("settingGcashQrPreview"),empty=$("settingGcashQrEmpty");
+ if(preview&&empty){if(s.gcashQr){preview.src=s.gcashQr;preview.style.display="block";empty.style.display="none"}else{preview.removeAttribute("src");preview.style.display="none";empty.style.display="block"}}
+}
+function saveGcashQr(){
+ const file=$("settingGcashQrFile").files[0];
+ if(!file)return toast("Choose your GCash QR image first.");
+ if(!["image/png","image/jpeg"].includes(file.type))return toast("Please upload a PNG or JPG image.");
+ if(file.size>1536*1024)return toast("GCash QR image must be 1.5 MB or smaller.");
+ const reader=new FileReader();
+ reader.onload=()=>{if(typeof reader.result!=="string"||!reader.result.startsWith("data:image/"))return toast("Could not read that QR image.");db.settings.gcashQr=reader.result;saveDB();renderSettings();$("settingGcashQrFile").value="";toast("GCash QR saved in POS Settings.")};
+ reader.onerror=()=>toast("Could not read the selected QR image.");
+ reader.readAsDataURL(file);
+}
+function removeGcashQr(){
+ if(!db.settings.gcashQr)return toast("There is no saved GCash QR.");
+ if(!confirm("Remove the saved GCash QR? Existing sales and inventory will not be changed."))return;
+ delete db.settings.gcashQr;saveDB();renderSettings();$("settingGcashQrFile").value="";toast("Saved GCash QR removed.");
+}
 function backupData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sari-sari-backup-"+today()+".json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded")}
 function restoreData(){let f=$("restorefile").files[0];if(!f)return toast("Choose a backup JSON file first");if(!confirm("Restore backup? This replaces the current store data."))return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x||!Array.isArray(x.products)||!Array.isArray(x.sales))throw Error("Invalid backup");db={...initial(),...x};saveDB();refresh();toast("Backup restored")}catch(e){alert("Could not restore: invalid backup file.")}};r.readAsText(f)}
 function clearAllData(){if(!confirm("WARNING: permanently delete all store records from this browser?"))return;if(!confirm("Last confirmation: this cannot be undone. Download a backup first if needed."))return;localStorage.removeItem(KEY);db=initial();cart=[];saveDB();refresh();toast("Store data cleared")}

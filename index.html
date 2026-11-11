@@ -144,15 +144,14 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  <div class="auth-card">
   <div class="auth-mark">🛒</div>
   <h1 id="authHeading">Restoring secure session…</h1>
-  <p class="auth-sub" id="authSub">Checking your cloud account. Please wait.</p>
+  <p class="auth-sub" id="authSub">Sign in to continue.</p>
   <form id="ownerAuthForm" onsubmit="submitOwnerAuth(event)">
-   <div class="auth-field"><label for="ownerUsername">OWNER USERNAME</label><input id="ownerUsername" autocomplete="username" required minlength="3" maxlength="40" placeholder="Enter your username"></div>
+   <div class="auth-field"><label for="ownerUsername">USERNAME</label><input id="ownerUsername" autocomplete="username" required minlength="3" maxlength="40" placeholder="Enter your username"></div>
    <div class="auth-field"><label for="ownerPassword">PASSWORD</label><input id="ownerPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Enter your password"></div>
    <div class="auth-field" id="confirmPasswordField" style="display:none"><label for="ownerPasswordConfirm">CONFIRM PASSWORD</label><input id="ownerPasswordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Re-enter your password"></div>
    <button id="ownerAuthSubmit" type="submit">Sign in</button>
    <p class="auth-error" id="ownerAuthError" role="alert"></p>
   </form>
-  <p class="auth-note">Owner login and store records are securely stored in your cloud database. Changes sync automatically when you are online.</p>
  </div>
 </div>
 
@@ -412,7 +411,7 @@ let cloudReady=false,cloudRevision=0,cloudSaveTimer=null,cloudSaveBusy=false,clo
 function ownerAuthMessage(message){$("ownerAuthError").textContent=message}
 function ownerAuthScreen(){
   $("authHeading").textContent=ownerSetupMode?"Create cloud owner account":"Owner sign in";
-  $("authSub").textContent=ownerSetupMode?"Create the one owner account for this store. Your login will work across devices.":"Sign in to open your cloud-connected JOSHUA POS workspace.";
+  $("authSub").textContent=ownerSetupMode?"Create your store owner account.":"Sign in to continue to SINSIN STORE.";
   $("ownerAuthSubmit").textContent=ownerSetupMode?"Create cloud account":"Sign in";
   $("confirmPasswordField").style.display=ownerSetupMode?"block":"none";
   $("ownerPassword").autocomplete=ownerSetupMode?"new-password":"current-password";

@@ -28,6 +28,19 @@ button,input,select,textarea{font:inherit}
 button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--green);color:white;font-weight:650}
 button:active{transform:scale(.98)}
 button:disabled{opacity:.45;cursor:not-allowed}
+/* Polished, responsive interaction feedback for clickable controls and icons. */
+button{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease,background-color .18s ease,filter .18s ease}
+button:not(:disabled):hover{filter:brightness(1.045)}
+button:not(:disabled):active{transform:scale(.965);filter:brightness(.97)}
+button:focus-visible{outline:3px solid #0ba58c66;outline-offset:3px}
+.iconbtn{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,background-color .22s ease}
+.iconbtn:hover{transform:translateY(-2px) rotate(-4deg);box-shadow:0 6px 14px #087f7026}
+.iconbtn:active{transform:scale(.88) rotate(0deg)}
+.navbtn .ico{display:inline-block;transition:transform .22s cubic-bezier(.2,.8,.2,1),filter .22s ease}
+.navbtn:hover .ico{transform:scale(1.16) rotate(-5deg);filter:drop-shadow(0 2px 2px #087f7030)}
+.navbtn:active .ico{transform:scale(.86)}
+@media(prefers-reduced-motion:reduce){button,.iconbtn,.navbtn .ico{transition:none!important;animation:none!important}}
+
 input,select,textarea{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);outline:none;min-width:0}
 input:focus,select:focus,textarea:focus{border-color:var(--green2);box-shadow:0 0 0 2px #0ba58c20}
 label{display:block;color:var(--muted);font-size:12px;margin:0 0 5px;font-weight:650}

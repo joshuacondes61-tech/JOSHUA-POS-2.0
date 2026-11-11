@@ -125,6 +125,15 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 #ownerAuth .auth-error{color:#bd3030;font-size:12px;min-height:18px;margin:9px 0 0}
 #ownerAuth .auth-note{font-size:11px;color:#71817c;line-height:1.5;margin:16px 0 0}
 @media(max-width:480px){#ownerAuth .auth-card{padding:23px 19px}}
+@media(max-width:680px){
+ #posScanner{align-items:flex-start!important;justify-content:center!important;padding:calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px)!important}
+ #posScanner .pos-scanner-card{width:100%!important;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px)!important;padding:12px!important;border-radius:14px!important}
+ #posScanner .pos-scanner-header{position:sticky;top:-12px;z-index:30;background:var(--card);padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:8px}
+ #posScanner .pos-scanner-header h2{font-size:16px!important}
+ #posScanner .pos-scanner-close{flex-shrink:0;min-width:82px;min-height:42px;padding:10px 12px!important;position:relative;z-index:31}
+ #posScanReader{max-height:34dvh}
+ #posScanFeedback{padding:9px!important}
+}
 
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -374,8 +383,8 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
 
 
 <div id="posScanner" style="display:none;position:fixed;inset:0;z-index:10000;background:#000d;padding:18px;align-items:center;justify-content:center">
- <div style="width:min(100%,520px);background:var(--card);color:var(--text);border-radius:18px;padding:16px">
-  <div class="between"><h2 style="margin:0">📷 Scan item for sale</h2><button type="button" class="danger sm" onclick="stopPosScanner()">Close</button></div>
+ <div class="pos-scanner-card" style="width:min(100%,520px);max-height:calc(100dvh - 36px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);color:var(--text);border-radius:18px;padding:16px">
+  <div class="between pos-scanner-header"><h2 style="margin:0">📷 Scan item for sale</h2><button type="button" class="danger sm pos-scanner-close" onclick="stopPosScanner()" aria-label="Close POS scanner">✕ Close</button></div>
   <p class="muted" style="margin:10px 0">Point your camera at the product barcode.</p>
   <div id="posScanReader" style="width:100%;overflow:hidden;border-radius:12px;background:#111"></div>
   <p id="posScanStatus" class="muted" style="margin:10px 0 0">Starting camera…</p>

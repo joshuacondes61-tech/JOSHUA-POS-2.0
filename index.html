@@ -214,6 +214,59 @@ body.auth-locked>.topbar,body.auth-locked>.app,body.auth-locked>.bottomnav,body.
  .dashboard-page .chart{height:155px}
 }
 @media(prefers-reduced-motion:reduce){.dashboard-page,.dashboard-page .stat,.dashboard-page .chartbar{animation:none!important;transition:none!important}}
+
+/* SINSIN premium dashboard graphics */
+.dashboard-page{position:relative;isolation:isolate}
+.dashboard-page:before{content:"";position:absolute;z-index:-1;inset:-22px -22px auto;height:420px;pointer-events:none;background:radial-gradient(ellipse at 8% 0%,#10b98112,transparent 48%),radial-gradient(ellipse at 90% 4%,#0ea5e912,transparent 42%)}
+.dash-hero{min-height:205px;padding:32px 34px;border:1px solid #ffffff24;background:linear-gradient(112deg,#063f39 0%,#087f70 43%,#0ca78b 100%);box-shadow:0 18px 42px #064e3b32}
+.dash-hero:after{content:"";position:absolute;z-index:0;inset:0;pointer-events:none;opacity:.16;background-image:linear-gradient(#ffffff22 1px,transparent 1px),linear-gradient(90deg,#ffffff22 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(90deg,black,transparent 85%)}
+.dash-hero-copy{max-width:560px}
+.dash-hero h1{font-size:clamp(27px,3.3vw,38px);font-weight:850;letter-spacing:-1.2px;text-shadow:0 2px 15px #002e2928}
+.dash-hero p{font-size:14px;letter-spacing:.1px}
+.dash-hero-orb{width:280px;height:280px;right:17%;top:-145px;border:1px solid #ffffff32;box-shadow:0 0 0 22px #ffffff0b,0 0 0 48px #ffffff09,0 0 0 76px #ffffff06}
+.dash-hero-actions button{min-height:46px;padding:11px 17px;border-radius:13px;transition:transform .2s ease,box-shadow .2s ease}
+.dash-hero-actions button:hover{transform:translateY(-3px);box-shadow:0 10px 22px #002e2938}
+.dashboard-page .dashgrid{gap:14px}
+.dashboard-page .stat{min-height:132px;padding:19px;border-radius:19px;border:1px solid var(--border);background:linear-gradient(145deg,var(--card) 0%,var(--card) 72%,var(--pale) 160%);box-shadow:0 8px 24px #153b3010}
+.dashboard-page .stat:before{content:"";position:absolute;right:-24px;bottom:-44px;width:115px;height:115px;border-radius:50%;background:radial-gradient(circle,#0ba58c14,transparent 70%);pointer-events:none}
+.dashboard-page .stat .num{font-size:clamp(22px,2.2vw,29px);font-variant-numeric:tabular-nums;line-height:1.15}
+.dashboard-page .stat small:first-child{font-size:11px;letter-spacing:.45px;text-transform:uppercase}
+.dashboard-page .stat .emoji{position:relative;z-index:1;width:48px;height:48px;border-radius:16px;font-size:23px;background:linear-gradient(145deg,var(--pale),var(--card));box-shadow:inset 0 1px #ffffffaa,0 5px 13px #087f7010}
+.dashboard-page .grid2>.card,.dashboard-page>.card{border-radius:20px;border-color:var(--border);box-shadow:0 8px 26px #153b300c}
+.dashboard-page .grid2>.card h2,.dashboard-page>.card h2{display:flex;align-items:center;gap:8px;font-weight:800}
+.dashboard-page .grid2>.card h2:before,.dashboard-page>.card h2:before{content:"";width:4px;height:17px;border-radius:5px;background:linear-gradient(#16b99a,#087f70);display:inline-block}
+.dashboard-page .chart{position:relative;align-items:stretch;height:190px;padding:18px 8px 0;border-radius:14px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 43px,var(--border) 44px,var(--border) 45px);overflow:hidden}
+.dashboard-page .chartcol{justify-content:flex-end;gap:7px}
+.dashboard-page .chartcol small{font-size:10px!important;font-weight:750;color:var(--muted)}
+.dashboard-page .chartbar{width:min(38px,70%);min-height:4px;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#54dfbb 0%,#12a889 48%,#087f70 100%);box-shadow:0 5px 14px #087f7030,inset 0 1px #ffffff70;transition:height .55s cubic-bezier(.2,.8,.2,1),filter .2s ease;animation:dashBarRise .7s ease both}
+@keyframes dashBarRise{from{transform:scaleY(.2);transform-origin:bottom;opacity:.35}to{transform:scaleY(1);transform-origin:bottom;opacity:1}}
+.dashboard-page .chartcol:hover .chartbar{filter:brightness(1.12) saturate(1.12)}
+.dashboard-page .chartlabel{font-size:10px;font-weight:700}
+.dashboard-page .dash-hero+.dashgrid+.grid2 .grid2 button{min-height:43px;border-radius:12px}
+.dashboard-page .stack>div{padding:11px 2px;border-bottom:1px solid var(--border)}
+.dashboard-page .stack>div:last-child{border-bottom:0}
+.dashboard-page #dashalerts .badge{border-radius:20px;padding:6px 10px}
+.dashboard-page #dashrecent .tablewrap{border-radius:12px}
+.dashboard-page #dashrecent th{background:var(--pale)}
+@media(max-width:950px){
+ .dash-hero{min-height:185px;padding:27px}
+ .dashboard-page .stat{min-height:120px;padding:16px}
+}
+@media(max-width:680px){
+ .dashboard-page:before{inset:-12px -12px auto;height:300px}
+ .dash-hero{min-height:0;padding:23px 19px;border-radius:19px}
+ .dash-hero h1{font-size:27px}
+ .dash-hero-orb{width:200px;height:200px;right:-75px;top:-100px}
+ .dashboard-page .dashgrid{gap:9px}
+ .dashboard-page .stat{min-height:112px;padding:12px;border-radius:15px}
+ .dashboard-page .stat .num{font-size:clamp(17px,5vw,22px);letter-spacing:-.5px}
+ .dashboard-page .stat .emoji{width:35px;height:35px;font-size:17px;border-radius:12px}
+ .dashboard-page .chart{height:160px;padding:14px 4px 0;gap:4px}
+ .dashboard-page .chartbar{width:min(27px,72%)}
+ .dashboard-page .grid2>.card,.dashboard-page>.card{padding:15px;border-radius:16px}
+}
+@media(prefers-reduced-motion:reduce){.dashboard-page .chartbar{animation:none!important}}
+
 </style>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>

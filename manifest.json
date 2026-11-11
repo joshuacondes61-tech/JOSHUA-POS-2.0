@@ -16,5 +16,11 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ]
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "prefer_related_applications": false,
+  "lang": "en-PH"
 }

@@ -1207,56 +1207,12 @@ async function startPosScanner(){
  const modal=$("posScanner"),status=$("posScanStatus"),reader=$("posScanReader");
  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast("Camera access requires HTTPS and a supported browser.");return}
  if(typeof Html5Qrcode==="undefined"){toast("Scanner library did not load. Check your internet connection.");return}
- modal.style.display="flex";resetPosScanFeedback();status.textContent="Requesting rear camera…";reader.innerHTML="";
- posScanActive=false;posLastScanCode="";posLastScanSeenAt=0;
- let temporaryStream=null;
+ modal.style.display="flex";resetPosScanFeedback();status.textContent="Allow camera access when your device asks.";reader.innerHTML="";
  try{
   posQrScanner=new Html5Qrcode("posScanReader",{verbose:false});
   const formats=[Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.QR_CODE];
-  const ua=navigator.userAgent||"";
-  const mobile=/Android|iPhone|iPad|iPod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-  let cameraChoice={facingMode:{ideal:mobile?"environment":"user"}};
-  if(mobile){
-   // Never accept an ideal-facingMode fallback: iOS may silently return
-   // the front camera. Require the environment camera and use its device ID.
-   let rearDeviceId="";
-   try{
-    temporaryStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:"environment"}}});
-    const track=temporaryStream.getVideoTracks()[0];
-    const settings=track&&track.getSettings?track.getSettings():{};
-    if(settings.deviceId)rearDeviceId=settings.deviceId;
-    temporaryStream.getTracks().forEach(t=>t.stop());
-    temporaryStream=null;
-   }catch(rearCameraError){
-    if(temporaryStream){temporaryStream.getTracks().forEach(t=>t.stop());temporaryStream=null}
-   }
-   if(rearDeviceId){
-    cameraChoice=rearDeviceId;
-   }else{
-    try{
-     const devices=await navigator.mediaDevices.enumerateDevices();
-     const cameras=devices.filter(device=>device.kind==="videoinput");
-     const rear=cameras.find(device=>/back|rear|environment|world|main/i.test(device.label||"")&&!/front|facetime|selfie/i.test(device.label||""));
-     cameraChoice=rear?rear.deviceId:{facingMode:{exact:"environment"}};
-    }catch(enumerateError){cameraChoice={facingMode:{exact:"environment"}}}
-   }
-  }else{
-   try{
-    const devices=await navigator.mediaDevices.enumerateDevices();
-    const front=devices.find(device=>device.kind==="videoinput"&&/front|user|facetime/i.test(device.label||""));
-    if(front)cameraChoice=front.deviceId;
-   }catch(e){}
-  }
-  status.textContent=mobile?"Starting rear camera…":"Starting webcam…";
-  posScanActive=true;
-  await posQrScanner.start(cameraChoice,{
-   fps:mobile?15:18,
-   qrbox:(w,h)=>({width:Math.max(220,Math.min(1000,Math.floor(w*.96))),height:Math.max(110,Math.min(400,Math.floor(h*.74)))}),
-   aspectRatio:mobile?1.777:1.333,
-   disableFlip:true,
-   formatsToSupport:formats,
-   videoConstraints:mobile?{facingMode:{exact:"environment"},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}}:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}
-  },async(decoded)=>{
+  const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  await posQrScanner.start(mobile?{facingMode:"environment"}:{facingMode:"user"},{fps:20,qrbox:(w,h)=>({width:Math.min(640,w*.98),height:Math.min(280,h*.62)}),formatsToSupport:formats,videoConstraints:{width:{ideal:1280},height:{ideal:720},facingMode:{ideal:mobile?"environment":"user"}}},async(decoded)=>{
    if(!posScanActive)return;
    const code=String(decoded||"").trim();
    if(!code)return;
@@ -1293,36 +1249,10 @@ async function startPosScanner(){
   },()=>{
    if(posLastScanCode&&Date.now()-posLastScanSeenAt>900)posLastScanCode="";
   });
-  status.textContent=mobile?"Rear camera ready. Center the barcode inside the scan area and hold steady.":"Webcam ready. Hold the barcode steady in the scan area.";
-  const button=$("posTorchButton");
-  if(button){
-   button.dataset.enabled="false";button.textContent="🔦 Turn on flashlight";
-   button.style.display=mobile?"block":"none";
-   try{
-    const caps=posQrScanner.getRunningTrackCapabilities();
-    if(caps&&caps.torch)button.style.display="block";
-    // Apply only camera controls that this particular device reports.
-    const advanced=[];
-    if(mobile&&Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous"))advanced.push({focusMode:"continuous"});
-    if(mobile&&Array.isArray(caps.exposureMode)&&caps.exposureMode.includes("continuous"))advanced.push({exposureMode:"continuous"});
-    if(mobile&&Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes("continuous"))advanced.push({whiteBalanceMode:"continuous"});
-    if(caps&&caps.exposureCompensation){
-     const range=caps.exposureCompensation;
-     const boost=Math.min(Number(range.max)||0,Math.max(Number(range.min)||0,1));
-     if(boost>0)advanced.push({exposureCompensation:boost});
-    }
-    if(advanced.length)await posQrScanner.applyVideoConstraints({advanced});
-   }catch(e){/* Unsupported camera controls must not stop barcode scanning. */}
-  }
-  // Slightly brighten the on-screen preview; barcode decoding still uses the
-  // original camera frames, so this is only a visibility aid.
-  const preview=reader.querySelector("video");
-  if(preview){preview.style.filter="brightness(1.65) contrast(1.12) saturate(1.05)";preview.style.webkitFilter=preview.style.filter;}
- }catch(e){
-  if(temporaryStream)temporaryStream.getTracks().forEach(track=>track.stop());
-  posScanActive=false;await stopPosScanner();
-  toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the rear camera. Check camera permission and close other camera apps.");
- }
+  posScanActive=true;
+  status.textContent=mobile?"Camera ready. Hold the barcode horizontally, 15–25 cm away, fully inside the scan frame. Use bright lighting.":"Webcam ready. Hold the barcode steady in the scan area.";
+  const button=$("posTorchButton");if(button){button.dataset.enabled="false";button.style.display="none";try{const caps=posQrScanner.getRunningTrackCapabilities();if(caps&&caps.torch){button.style.display="block";button.textContent="🔦 Turn on flashlight"}}catch(e){}}
+ }catch(e){await stopPosScanner();toast(e&&e.name==="NotAllowedError"?"Camera permission was denied. Allow camera access in your browser settings.":"Could not open the camera. Use HTTPS, allow camera access, and close other camera apps.")}
 }
 async function togglePosTorch(){
  const button=$("posTorchButton");if(!posQrScanner||!button)return;
